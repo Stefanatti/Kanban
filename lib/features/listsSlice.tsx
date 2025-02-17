@@ -3,6 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 interface List {
   _id: string;
   title: "To Do" | "Doing" | "Done";
+  status: "To Do" | "Doing" | "Done";
   tasks?: { _id: string; title: string }[];
   boardId?: string;
   //   createdAt?: string;

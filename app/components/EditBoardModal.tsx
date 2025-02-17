@@ -122,15 +122,6 @@ function EditBoardModal({
                     alignItems: "center",
                   }}
                 >
-                  {/* Dropdown for existing columns */}
-
-                  {/* <TextField
-                    sx={{ width: 350, maxWidth: "100%" }}
-                    label={column.title}
-                    id="outlined-size-small"
-                    value={column.title}
-                    size="small"
-                  /> */}
                   <TextField
                     id="outlined-select-currency"
                     select
@@ -158,15 +149,6 @@ function EditBoardModal({
                   alignItems: "center",
                 }}
               >
-                {/* <TextField
-                  sx={{ width: 350, maxWidth: "100%" }}
-                  label="Size"
-                  id="outlined-size-small"
-                  size="small"
-                  value={columnName}
-                  onChange={handleColumnChange}
-                /> */}
-
                 <TextField
                   id="outlined-select-currency"
                   select

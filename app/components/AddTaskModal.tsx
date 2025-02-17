@@ -3,16 +3,19 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
-import { MenuItem, TextField } from "@mui/material";
+import { IconButton, MenuItem, TextField } from "@mui/material";
+import ClearIcon from "@mui/icons-material/Clear";
 
 interface Board {
   createdAt: string;
   title?: string;
-  lists?: {
-    title: string;
-    _id: string;
-    tasks?: Task[];
-  }[];
+  lists?:
+    | {
+        title: string;
+        _id: string;
+        tasks?: Task[];
+      }[]
+    | undefined;
   updatedAt: string;
   __v: number;
   _id?: string;
@@ -44,7 +47,13 @@ interface ModalProps {
   setNewTaskName: (status: string) => void;
   listId?: string;
   setListId?: (id: string) => void;
-  addTask: (taskName: string, listId?: string) => Promise<void>;
+  addTask: (
+    taskName: string,
+    listId: string,
+    isCompleted: boolean,
+    description?: string,
+    subtasks?: string[]
+  ) => Promise<void>;
 }
 const statuses = ["To Do", "Doing", "Done"];
 
@@ -63,11 +72,6 @@ const style = {
   p: 4,
 };
 
-// const AddBoardModal: FC<ButtonModalProps>: React.ReactElement = ({
-//   open,
-//   handleClose,
-//   addBoards,
-// }) => {
 function AddTaskModal({
   open,
   handleClose,
@@ -75,11 +79,37 @@ function AddTaskModal({
   addTask,
   newTaskName,
   setNewTaskName,
-  listId,
-  setListId,
 }: ModalProps): React.ReactElement {
   // const [newTaskName, setNewTaskName] = useState("");
   const [selectedColumnStatus, setSelectedColumnStatus] = useState<string>("");
+  const [taskDescription, setTaskDescription] = useState<string>("");
+  const [subtasks, setSubtasks] = useState<string[]>([]);
+
+  // const [subtasks, setSubtasks] = useState<string[]>(
+  //   selectedBoard?.lists
+  //     ?.flatMap((list) => list.tasks || [])
+  //     .flatMap((task) => task.subtasks || []) || []
+  // );
+  const [addNewSubtask, setAddNewSubtask] = useState(false);
+
+  console.log(subtasks);
+
+  // Handle adding a new empty subtask field
+  const handleAddSubtask = () => {
+    setSubtasks([...subtasks, ""]);
+  };
+
+  // Handle updating the value of a specific subtask
+  const handleSubtaskChange = (index: number, value: string) => {
+    const updatedSubtasks = [...subtasks];
+    updatedSubtasks[index] = value;
+    setSubtasks(updatedSubtasks);
+  };
+
+  // Handle removing a subtask field
+  const handleRemoveSubtask = (index: number) => {
+    setSubtasks(subtasks.filter((_, i) => i !== index));
+  };
 
   const handleCreateNewTask = async (
     event: React.FormEvent<HTMLFormElement>
@@ -89,8 +119,6 @@ function AddTaskModal({
       alert("Task name and status are required!");
       return;
     }
-
-    // Find the list ID based on status
     const targetList = selectedBoard?.lists?.find(
       (list) => list.title === selectedColumnStatus
     );
@@ -98,16 +126,20 @@ function AddTaskModal({
       alert("Invalid board configuration!");
       return;
     }
-
     try {
-      // Create the task
-      await addTask(newTaskName, targetList._id);
+      const isCompleted = selectedColumnStatus === "Done";
 
-      // Reset form
+      await addTask(
+        newTaskName,
+        targetList._id,
+        isCompleted,
+        taskDescription,
+        subtasks
+      );
+
       if (setNewTaskName) setNewTaskName("");
       setSelectedColumnStatus("");
-
-      // Close modal after success
+      setNewTaskName("");
       handleClose();
     } catch (error) {
       console.error("Failed to create task:", error);
@@ -158,47 +190,48 @@ function AddTaskModal({
 
             <TextField
               sx={{ width: 350, maxWidth: "100%" }}
-              label="Size"
+              //label="Size"
+              placeholder="Describe your task..."
               id="outlined-size-small"
-              defaultValue="Small"
               size="small"
+              value={taskDescription}
+              onChange={(e) => setTaskDescription(e.target.value)}
             />
-            {/*   <TextField
-              sx={{ width: 350, maxWidth: "100%" }}
-              label="Size"
-              id="outlined-size-small"
-              defaultValue="Small"
-              size="small"
-            /> */}
           </Box>
           <Box>
             <Typography id="modal-modal-title" variant="h6" component="h2">
               Subtasks
             </Typography>
-
-            <TextField
-              sx={{ width: 350, maxWidth: "100%" }}
-              label="Subtask"
-              id="outlined-size-small"
-              defaultValue="Small"
-              size="small"
-            />
-
-            <TextField
-              sx={{ width: 350, maxWidth: "100%" }}
-              label="Description"
-              id="outlined-size-small"
-              defaultValue="Small"
-              size="small"
-            />
+            {subtasks.map((subtask, index) => (
+              <Box
+                key={index}
+                sx={{ display: "flex", alignItems: "center", mt: 1 }}
+              >
+                <TextField
+                  fullWidth
+                  placeholder={`Subtask ${index + 1}`}
+                  size="small"
+                  value={subtask}
+                  onChange={(e) => handleSubtaskChange(index, e.target.value)}
+                />
+                <IconButton
+                  onClick={() => handleRemoveSubtask(index)}
+                  sx={{ ml: 1 }}
+                >
+                  <ClearIcon />
+                </IconButton>
+              </Box>
+            ))}
           </Box>
-          <Box
-            sx={{ display: "flex", flexDirection: "column", gap: "10px", m: 3 }}
+          <Button
+            fullWidth
+            sx={{ borderRadius: "20px", mt: 2 }}
+            variant="contained"
+            onClick={handleAddSubtask}
           >
-            <Button sx={{ borderRadius: "20px" }} variant="contained">
-              + Add a New Subtask
-            </Button>
-          </Box>
+            + Add a New Subtask
+          </Button>
+
           <Box>
             <Typography id="modal-modal-title" variant="h6" component="h2">
               Status

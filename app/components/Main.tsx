@@ -14,6 +14,7 @@ import {
   useCreateListMutation,
   useDeleteListMutation,
 } from "@/lib/features/listsSlice";
+import EditTasksModal from "./EditTasksModal";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: "grey",
@@ -34,6 +35,14 @@ const TaskItem = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
   textAlign: "center",
   color: theme.palette.text.secondary,
+  width: "100%", // Matches parent (330px)
+  maxWidth: "350px", // Ensures it does not grow beyond this width
+  wordWrap: "break-word",
+  overflowWrap: "break-word",
+  whiteSpace: "normal", // Allows multi-line text
+  display: "flex",
+  // justifyContent: "center",
+  // alignItems: "center",
   ...theme.applyStyles("dark", {
     backgroundColor: "#1A2027",
   }),
@@ -73,19 +82,19 @@ interface MainProps {
 }
 
 const Main: FC<MainProps> = ({ selectedBoard }) => {
-  const [open, setOpen] = useState<boolean>(false);
-
   const [columnName, setColumnName] = useState<string>("");
   const [newColumnStatus, setNewColumnStatus] = useState<string>(""); // For new column selection
 
-  const [openModal, setOpenModal] = useState<boolean>(false);
-  const { data: boards, isLoading, isError } = useGetBoardsQuery();
+  const [openEditBoardModal, setOpenEditBoardModal] = useState<boolean>(false);
+  const [openEditTaskModal, setOpenEditTaskModal] = useState<boolean>(false);
+
   const [selectedBoardTitle, setSelectedBoardTitle] = useState<
     string | undefined
   >("");
   const [selectedBoardLists, setSelectedBoardLists] = useState<
     Array<List | undefined>
   >([]);
+  const [taskId, setTaskId] = useState<string | undefined>("");
 
   const [boardId, setBoardId] = useState<string | undefined>("");
 
@@ -93,12 +102,14 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
   const [deleteList] = useDeleteListMutation();
   const [updateBoard] = useUpdateBoardMutation();
 
-  const handleOpenModal = () => setOpenModal(true);
-  const handleCloseModal = () => setOpenModal(false);
-  const toggleDrawer = (newOpen: boolean) => () => {
-    setOpen(newOpen ?? !open);
+  const handleOpenEditBoardModal = () => setOpenEditBoardModal(true);
+  const handleCloseEditBoardModal = () => setOpenEditBoardModal(false);
+  const handleOpenEditTaskModal = (task_id: string) => {
+    setTaskId(task_id);
+    setOpenEditTaskModal(true);
   };
-
+  const handleCloseEditTaskModal = () => setOpenEditTaskModal(false);
+  console.log(taskId);
   useEffect(() => {
     if (selectedBoard) {
       setBoardId(selectedBoard._id);
@@ -109,7 +120,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
 
   const handleEditBoardClick = (event: React.MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();
-    handleOpenModal();
+    handleOpenEditBoardModal();
   };
 
   const handleAddColumn = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -149,6 +160,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
       await Promise.all(updatePromises);
 
       setSelectedBoardTitle(selectedBoardTitle);
+      handleCloseEditBoardModal();
     } catch (err) {
       console.error("Failed to submit changes:", err);
     }
@@ -168,7 +180,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
 
   return (
     <Container maxWidth="xl">
-      {!boards ? (
+      {!selectedBoard ? (
         <Box
           sx={{
             height: "100vh",
@@ -230,7 +242,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
                     </Box>
                     <Box
                       sx={{
-                        minWidth: "330px",
+                        width: "330px",
                         height: "95%",
                         backgroundColor: "#f5f5f5",
                         boxShadow: 1,
@@ -242,7 +254,12 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
                       }}
                     >
                       {list?.tasks?.map((task) => (
-                        <TaskItem key={task._id}>{task.title}</TaskItem>
+                        <TaskItem
+                          key={task._id}
+                          onClick={() => handleOpenEditTaskModal(task._id)}
+                        >
+                          {task.title}
+                        </TaskItem>
                       ))}
                     </Box>
                   </Box>
@@ -271,7 +288,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
           ) : (
             <Box
               sx={{
-                width: "330px",
+                width: "350px",
                 height: "95%",
                 mt: 3,
                 backgroundColor: "#f5f5f5",
@@ -291,11 +308,11 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
           )}
         </Box>
       )}
-      {openModal && (
+      {openEditBoardModal && (
         <div onClick={(e) => e.stopPropagation()}>
           <EditBoardModal
-            open={true}
-            handleClose={handleCloseModal}
+            open={openEditBoardModal}
+            handleClose={handleCloseEditBoardModal}
             addColumn={handleAddColumn}
             boardCollumns={selectedBoardLists.filter(
               (list): list is List => list !== undefined
@@ -310,6 +327,14 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
           />
         </div>
       )}
+      <div>
+        <EditTasksModal
+          open={openEditTaskModal}
+          handleClose={handleCloseEditTaskModal}
+          selectedBoard={selectedBoard}
+          taskId={taskId}
+        />
+      </div>
     </Container>
   );
 };

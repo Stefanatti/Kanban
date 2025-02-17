@@ -8,19 +8,7 @@ import {
   useGetBoardsQuery,
 } from "@/lib/features/boardSlice";
 import { useState } from "react";
-
-interface Board {
-  createdAt: string;
-  title?: string;
-  lists?: {
-    title: string;
-    _id: string;
-    tasks?: Task[];
-  }[];
-  updatedAt: string;
-  __v: number;
-  _id?: string;
-}
+import { Board, List, Task } from "./interfaces/interfaces";
 
 export default function Home() {
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
@@ -32,6 +20,7 @@ export default function Home() {
     data: selectedBoard,
     isLoading: selectedBoardisLoading,
     isError: selectedBoardIsError,
+    refetch, // Add this
   } = useGetBoardByIdQuery(selectedBoardId || "", {
     skip: !selectedBoardId,
   });
@@ -43,7 +32,11 @@ export default function Home() {
 
   return (
     <div className={styles.page}>
-      <KanbanBar selectedBoard={selectedBoard} />
+      <KanbanBar
+        selectedBoard={selectedBoard}
+        refetchBoard={refetch}
+        setSelectedBoardId={setSelectedBoardId}
+      />
       <Main selectedBoard={selectedBoard} />
       <SideBar boards={boards} onBoardSelect={handleBoardSelection} />
     </div>

@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-interface Board {
+export interface Board {
   createdAt: string;
   title: string;
   lists?: [];

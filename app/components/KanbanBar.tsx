@@ -16,45 +16,52 @@ import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
 import MoreIcon from "@mui/icons-material/MoreVert";
-import { useCreateTaskMutation } from "@/lib/features/tasksSlice";
+import { useCreateTaskMutation, Task } from "@/lib/features/tasksSlice";
+import { useDeleteBoardMutation, Board } from "@/lib/features/boardSlice";
 const pages = ["Products", "Pricing", "Blog"];
-const settings = ["Profile", "Account", "Dashboard", "Logout"];
+const settings = ["Delete Board"];
 
-interface Board {
-  createdAt: string;
-  title?: string;
-  lists?: {
-    title: string;
-    _id: string;
-    tasks?: Task[];
-  }[];
-  updatedAt: string;
-  __v: number;
-  _id?: string;
-}
+// interface Board {
+//   createdAt: string;
+//   title?: string;
+//   lists?: {
+//     title: string;
+//     _id: string;
+//     tasks?: Task[];
+//   }[];
+//   updatedAt: string;
+//   __v: number;
+//   _id?: string;
+// }
 
 interface KanbanBarProps {
   // addTask: (task: { id: number; name: string }) => void;
   selectedBoard: Board | undefined;
+  refetchBoard: () => void;
+  setSelectedBoardId: (id: string | null) => void;
 }
 
-interface List {
-  _id: string;
-  title: string;
-  tasks?: { _id: string; title: string }[];
-  boardId?: string;
-}
+// interface List {
+//   _id: string;
+//   title: string;
+//   tasks?: { _id: string; title: string }[];
+//   boardId?: string;
+// }
 
-interface Task {
-  title: string;
-  description?: string;
-  dueDate?: Date;
-  completed?: Boolean | undefined;
-  subtasks?: string[];
-  _id?: string;
-}
+// interface Task {
+//   title: string;
+//   description?: string;
+//   dueDate?: Date;
+//   completed?: Boolean | undefined;
+//   subtasks?: string[];
+//   _id?: string;
+//}
 
-const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
+const KanbanBar: FC<KanbanBarProps> = ({
+  selectedBoard,
+  refetchBoard,
+  setSelectedBoardId,
+}) => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [openModal, setOpenModal] = useState(false);
@@ -64,7 +71,7 @@ const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
     Array<Task | undefined>
   >([]);
   const [createTask] = useCreateTaskMutation();
-
+  const [deleteBoard] = useDeleteBoardMutation();
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
   };
@@ -89,71 +96,50 @@ const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
     event.stopPropagation();
     handleOpenModal();
   };
-
   console.log(selectedBoard);
 
-  useEffect(() => {
-    if (selectedBoard) {
-      setSelectedBoardTasks(
-        selectedBoard.lists?.flatMap((list) => list.tasks || []) || []
-      );
-    }
-  }, [selectedBoard]);
+  const handleDeleteBoard = (event: React.MouseEvent<HTMLLIElement>) => {
+    event.stopPropagation();
+    console.log("Delete board", selectedBoard?._id);
+    if (!selectedBoard?._id) return;
+    deleteBoard(selectedBoard?._id);
+    setSelectedBoardId(null);
+  };
 
   const handleCreateTask = async (
     taskName: string,
-    listId?: string
+    listId: string,
+    isCompleted: boolean,
+    description?: string,
+    subtasks?: string[]
   ): Promise<void> => {
     if (!taskName || !listId) return;
 
     try {
-      // Directly create the task
-      const newTask = { title: taskName, listId };
+      const formattedSubtasks = subtasks?.map((subtask) => ({
+        title: subtask,
+        completed: false,
+      }));
+
+      const newTask = {
+        title: taskName,
+        listId,
+        completed: isCompleted,
+        description,
+        subtasks: formattedSubtasks,
+      };
       const createdTask = await createTask(newTask).unwrap();
       console.log(createdTask);
       // Update the tasks array with the new task
-      setSelectedBoardTasks((prevTasks) => [...prevTasks, createdTask]);
+      // setSelectedBoardTasks((prevTasks) => [...prevTasks, createdTask]);
+      refetchBoard();
+
       console.log(selectedBoardTasks);
     } catch (err) {
       console.error("Failed to create task:", err);
       // You might want to show an error notification here
     }
   };
-
-  // const handleCreateTask = async (taskName: string, listId?: string) => {
-  //   try {
-  //     if (taskName && listId) {
-  //       console.log(`Creating task "${taskName}" in list "${listId}"`);
-
-  //       const newTask = {
-  //         title: taskName,
-  //         listId,
-  //       };
-
-  //       // Create task in the backend
-  //       const theNewTask = await createTask(newTask).unwrap();
-  //       console.log(theNewTask);
-  //       //  setSelectedBoardTasks((prevTasks) => [...prevTasks, response.data]);
-  //       // setNewTaskName("");
-  //       // setListId("");
-  //     }
-  //   } catch (err) {
-  //     console.error("Failed to submit changes:", err);
-  //   }
-  // };
-
-  // const handleCreateTask = async (taskName: string, listId?: string) => {
-  //   try {
-  //     if (taskName && listId) {
-  //       const newTask = { title: taskName, listId };
-  //       //await createTask(newTask).unwrap();
-  //       // setNewTaskName("");
-  //       // setSelectedBoardTasks((prevTasks) => [...prevTasks, newTask]);
-  //     }
-  //   } catch (err) {
-  //     console.error("Failed to submit changes:", err);
-  //   }
-  // };
 
   return (
     <>
@@ -215,45 +201,7 @@ const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
             >
               {selectedBoard?.title}
             </Typography>
-            {/* <Box
-              sx={{ display: { xs: "flex", md: "none" }, flexGrow: 1, mr: 5 }}
-            >
-              <IconButton
-                size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={handleOpenNavMenu}
-                color="inherit"
-              >
-                <MenuIcon />
-              </IconButton>
-              <Menu
-                id="menu-appbar"
-                anchorEl={anchorElNav}
-                disablePortal
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "left",
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "left",
-                }}
-                open={Boolean(anchorElNav)}
-                onClose={handleCloseNavMenu}
-                sx={{
-                  display: { xs: "block", md: "none" },
-                }}
-              >
-                {pages.map((page) => (
-                  <MenuItem key={page} onClick={handleCloseNavMenu}>
-                    <Typography textAlign="center">{page}</Typography>
-                  </MenuItem>
-                ))}
-              </Menu>
-            </Box> */}
+
             <Box
               sx={{
                 flexGrow: 1,
@@ -272,19 +220,7 @@ const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
                   + Add new Task
                 </Typography>
               </Button>
-
-              {/* {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: "white", display: "block" }}
-              >
-                {page}
-              </Button>
-            ))} */}
             </Box>
-
-            {/* THREE DOTS!! */}
 
             <Box sx={{ flexGrow: 0 }}>
               <Tooltip title="Open settings">
@@ -319,7 +255,7 @@ const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
                 onClose={handleCloseUserMenu}
               >
                 {settings.map((setting) => (
-                  <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                  <MenuItem key={setting} onClick={handleDeleteBoard}>
                     <Typography textAlign="center">{setting}</Typography>
                   </MenuItem>
                 ))}
