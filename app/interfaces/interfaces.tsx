@@ -4,11 +4,12 @@ export interface Task {
   dueDate?: Date;
   completed?: boolean;
   subtasks?: string[];
-  _id: string;
+  id: string;
+  listId?: string;
 }
 
 export interface List {
-  _id: string;
+  id: string;
   title: string;
   tasks?: Task[];
   boardId?: string;
@@ -19,6 +20,5 @@ export interface Board {
   title: string;
   lists?: List[];
   updatedAt: string;
-  __v: number;
-  _id: string;
+  id: string;
 }

@@ -4,7 +4,7 @@ import { Task } from "@/app/interfaces/interfaces";
 export const tasksApi = createApi({
   reducerPath: "tasksApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:5000/",
+    baseUrl: process.env.NEXT_PUBLIC_API_URL,
   }),
   tagTypes: ["Task"],
   endpoints: (builder) => ({

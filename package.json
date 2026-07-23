@@ -16,9 +16,12 @@
     "@mui/material": "^6.1.10",
     "@mui/material-nextjs": "^6.1.9",
     "@mui/styled-engine-sc": "^6.1.10",
+    "@prisma/adapter-pg": "^7.9.0",
+    "@prisma/client": "^7.9.0",
     "@reduxjs/toolkit": "^2.5.0",
     "axios": "^1.7.9",
     "next": "15.0.4",
+    "pg": "^8.22.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
@@ -30,6 +33,7 @@
     "@types/react-dom": "^19",
     "eslint": "^8",
     "eslint-config-next": "15.0.4",
+    "prisma": "^7.9.0",
     "typescript": "^5"
   }
 }

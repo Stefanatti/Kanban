@@ -4,7 +4,7 @@ import { List } from "@/app/interfaces/interfaces";
 export const listsApi = createApi({
   reducerPath: "listsApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:5000/",
+    baseUrl: process.env.NEXT_PUBLIC_API_URL,
   }),
   tagTypes: ["List"],
   endpoints: (builder) => ({

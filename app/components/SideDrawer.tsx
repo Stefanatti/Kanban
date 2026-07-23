@@ -17,7 +17,7 @@ import { Board } from "@/app/interfaces/interfaces";
 interface DrawerProps {
   // toggleDrawer: (open: boolean) => () => void;
   boards?: Board[];
-  onBoardSelect: (id: string) => () => void;
+  onBoardSelect: (id: string) => void;
   // createBoard: (title: string) => Promise<void>;
 }
 
@@ -59,8 +59,8 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
         <Divider />
 
         {boards?.map((board) => (
-          <ListItem key={board._id} disablePadding>
-            <ListItemButton onClick={() => onBoardSelect(board._id)}>
+          <ListItem key={board.id} disablePadding>
+            <ListItemButton onClick={() => onBoardSelect(board.id)}>
               <ListItemText primary={board.title} />
             </ListItemButton>
           </ListItem>

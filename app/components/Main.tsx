@@ -73,7 +73,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
 
   useEffect(() => {
     if (selectedBoard) {
-      setBoardId(selectedBoard._id);
+      setBoardId(selectedBoard.id);
       setSelectedBoardTitle(selectedBoard.title);
       setSelectedBoardLists(selectedBoard.lists || []);
     }
@@ -130,7 +130,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
     try {
       await deleteList(columnId).unwrap();
       const newLists = selectedBoardLists.filter(
-        (list) => list?._id !== columnId,
+        (list) => list?.id !== columnId,
       );
       setSelectedBoardLists(newLists);
     } catch (err) {
@@ -188,7 +188,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
               >
                 {selectedBoardLists.map((list) => (
                   <Box
-                    key={list?._id}
+                    key={list?.id}
                     sx={{
                       display: "flex",
                       flexDirection: "column",
@@ -214,7 +214,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
                       }}
                     >
                       {list?.tasks?.map((task) => (
-                        <TaskItem key={task._id}>{task.title}</TaskItem>
+                        <TaskItem key={task.id}>{task.title}</TaskItem>
                       ))}
                     </Box>
                   </Box>

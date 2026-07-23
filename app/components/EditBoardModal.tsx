@@ -110,7 +110,7 @@ function EditBoardModal({
             {boardCollumns &&
               boardCollumns.map((column) => (
                 <Box
-                  key={column._id}
+                  key={column.id}
                   sx={{
                     display: "flex",
                     justifyContent: "flex-start",
@@ -141,7 +141,7 @@ function EditBoardModal({
                       </MenuItem>
                     ))}
                   </TextField>
-                  <ClearIcon onClick={() => deleteColumn(column._id)} />
+                  <ClearIcon onClick={() => deleteColumn(column.id)} />
                 </Box>
               ))}
 

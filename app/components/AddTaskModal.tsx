@@ -71,7 +71,7 @@ function AddTaskModal({
 
     try {
       // Create the task
-      await addTask(newTaskName, targetList._id);
+      await addTask(newTaskName, targetList.id);
 
       // Reset form
       if (setNewTaskName) setNewTaskName("");
