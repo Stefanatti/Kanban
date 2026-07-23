@@ -12,14 +12,7 @@ import { Drawer, Typography } from "@mui/material";
 import AddBoardModal from "./AddBoardModal";
 import DrawerButton from "./DrawerButton";
 import { useCreateBoardMutation } from "@/lib/features/boardSlice";
-
-interface Board {
-  createdAt: string;
-  title: string;
-  updatedAt: string;
-  __v: number;
-  _id: string;
-}
+import { Board } from "@/app/interfaces/interfaces";
 
 interface DrawerProps {
   // toggleDrawer: (open: boolean) => () => void;

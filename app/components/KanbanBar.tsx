@@ -17,41 +17,13 @@ import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
 import MoreIcon from "@mui/icons-material/MoreVert";
 import { useCreateTaskMutation } from "@/lib/features/tasksSlice";
+import { Board, Task } from "@/app/interfaces/interfaces";
+
 const pages = ["Products", "Pricing", "Blog"];
 const settings = ["Profile", "Account", "Dashboard", "Logout"];
 
-interface Board {
-  createdAt: string;
-  title?: string;
-  lists?: {
-    title: string;
-    _id: string;
-    tasks?: Task[];
-  }[];
-  updatedAt: string;
-  __v: number;
-  _id?: string;
-}
-
 interface KanbanBarProps {
-  // addTask: (task: { id: number; name: string }) => void;
   selectedBoard: Board | undefined;
-}
-
-interface List {
-  _id: string;
-  title: string;
-  tasks?: { _id: string; title: string }[];
-  boardId?: string;
-}
-
-interface Task {
-  title: string;
-  description?: string;
-  dueDate?: Date;
-  completed?: Boolean | undefined;
-  subtasks?: string[];
-  _id?: string;
 }
 
 const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
@@ -84,7 +56,7 @@ const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
   const handleCloseModal = () => setOpenModal(false);
 
   const handleCreateBoardClick = (
-    event: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     event.stopPropagation();
     handleOpenModal();
@@ -95,14 +67,14 @@ const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
   useEffect(() => {
     if (selectedBoard) {
       setSelectedBoardTasks(
-        selectedBoard.lists?.flatMap((list) => list.tasks || []) || []
+        selectedBoard.lists?.flatMap((list) => list.tasks || []) || [],
       );
     }
   }, [selectedBoard]);
 
   const handleCreateTask = async (
     taskName: string,
-    listId?: string
+    listId?: string,
   ): Promise<void> => {
     if (!taskName || !listId) return;
 

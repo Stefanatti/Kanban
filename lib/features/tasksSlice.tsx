@@ -1,13 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-
-interface Task {
-  title: string;
-  description?: string;
-  dueDate?: Date;
-  completed?: Boolean;
-  subtasks?: string[];
-  _id: string;
-}
+import { Task } from "@/app/interfaces/interfaces";
 
 export const tasksApi = createApi({
   reducerPath: "tasksApi",

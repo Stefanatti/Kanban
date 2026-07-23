@@ -5,12 +5,7 @@ import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
 import { MenuItem, TextField } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
-
-interface List {
-  _id: string;
-  title: string;
-  tasks?: { _id: string; title: string }[];
-}
+import { List } from "@/app/interfaces/interfaces";
 
 interface EditBoardModalProps {
   open: boolean;
@@ -64,7 +59,7 @@ function EditBoardModal({
     addColumn(event);
   };
   const handleBoardNameChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setBoardName(event.target.value);
   };

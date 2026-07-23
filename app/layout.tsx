@@ -4,7 +4,7 @@ import "./globals.css";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 
 import StoreProvider from "./StoreProvider";
-import Home from "./page";
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -31,9 +31,7 @@ export default function RootLayout({
       <body>
         <StoreProvider>
           <AppRouterCacheProvider>
-            <main>
-              <Home />
-            </main>
+            <main>{children}</main>
           </AppRouterCacheProvider>
         </StoreProvider>
       </body>

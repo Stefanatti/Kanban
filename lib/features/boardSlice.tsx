@@ -1,13 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-
-interface Board {
-  createdAt: string;
-  title: string;
-  lists?: [];
-  updatedAt: string;
-  __v: number;
-  _id?: string;
-}
+import { Board } from "@/app/interfaces/interfaces";
 
 export const boardsApi = createApi({
   reducerPath: "boardsApi",

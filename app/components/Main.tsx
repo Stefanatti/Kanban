@@ -14,6 +14,7 @@ import {
   useCreateListMutation,
   useDeleteListMutation,
 } from "@/lib/features/listsSlice";
+import { Board, Task, List } from "@/app/interfaces/interfaces";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: "grey",
@@ -38,35 +39,6 @@ const TaskItem = styled(Paper)(({ theme }) => ({
     backgroundColor: "#1A2027",
   }),
 }));
-
-interface Board {
-  createdAt: string;
-  title?: string;
-  lists?: {
-    title: string;
-    _id: string;
-    tasks?: Task[];
-  }[];
-  updatedAt: string;
-  __v: number;
-  _id?: string;
-}
-
-interface Task {
-  title: string;
-  description: string;
-  dueDate: Date;
-  completed: boolean;
-  subtasks?: string[];
-  _id: string;
-}
-
-export interface List {
-  _id: string;
-  title: string;
-  tasks?: { _id: string; title: string }[];
-  boardId?: string;
-}
 
 interface MainProps {
   selectedBoard: Board | undefined;
@@ -158,7 +130,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
     try {
       await deleteList(columnId).unwrap();
       const newLists = selectedBoardLists.filter(
-        (list) => list?._id !== columnId
+        (list) => list?._id !== columnId,
       );
       setSelectedBoardLists(newLists);
     } catch (err) {
@@ -298,7 +270,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
             handleClose={handleCloseModal}
             addColumn={handleAddColumn}
             boardCollumns={selectedBoardLists.filter(
-              (list): list is List => list !== undefined
+              (list): list is List => list !== undefined,
             )}
             boardName={selectedBoardTitle}
             setBoardName={setSelectedBoardTitle}

@@ -8,19 +8,7 @@ import {
   useGetBoardsQuery,
 } from "@/lib/features/boardSlice";
 import { useState } from "react";
-
-interface Board {
-  createdAt: string;
-  title?: string;
-  lists?: {
-    title: string;
-    _id: string;
-    tasks?: Task[];
-  }[];
-  updatedAt: string;
-  __v: number;
-  _id?: string;
-}
+import { Board } from "@/app/interfaces/interfaces";
 
 export default function Home() {
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);

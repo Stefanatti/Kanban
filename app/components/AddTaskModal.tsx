@@ -4,37 +4,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
 import { MenuItem, TextField } from "@mui/material";
-
-interface Board {
-  createdAt: string;
-  title?: string;
-  lists?: {
-    title: string;
-    _id: string;
-    tasks?: Task[];
-  }[];
-  updatedAt: string;
-  __v: number;
-  _id?: string;
-}
-
-interface List {
-  _id: string;
-  title: string;
-  tasks?: { _id: string; title: string }[];
-  boardId?: string;
-  //   createdAt?: string;
-  //   updatedAt?: string;
-}
-
-interface Task {
-  title: string;
-  description: string;
-  dueDate: Date;
-  completed: Boolean;
-  subtasks?: string[];
-  _id: string;
-}
+import { Board } from "@/app/interfaces/interfaces";
 
 interface ModalProps {
   open: boolean;
@@ -82,7 +52,7 @@ function AddTaskModal({
   const [selectedColumnStatus, setSelectedColumnStatus] = useState<string>("");
 
   const handleCreateNewTask = async (
-    event: React.FormEvent<HTMLFormElement>
+    event: React.FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
     if (!newTaskName.trim() || !selectedColumnStatus.trim()) {
@@ -92,7 +62,7 @@ function AddTaskModal({
 
     // Find the list ID based on status
     const targetList = selectedBoard?.lists?.find(
-      (list) => list.title === selectedColumnStatus
+      (list) => list.title === selectedColumnStatus,
     );
     if (!targetList) {
       alert("Invalid board configuration!");
