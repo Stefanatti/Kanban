@@ -30,7 +30,7 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
 
   const handleCreateBoard = async (
     event: React.FormEvent<HTMLFormElement>,
-    columns: string[]
+    columns: string[],
   ) => {
     event.preventDefault();
     try {

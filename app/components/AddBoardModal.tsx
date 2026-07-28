@@ -11,7 +11,7 @@ interface AddBoardModalProps {
   handleClose: () => void;
   createBoard: (
     event: React.FormEvent<HTMLFormElement>,
-    columns: string[]
+    columns: string[],
   ) => Promise<void>;
   boardName: string;
   setBoardName: (title: string) => void;
