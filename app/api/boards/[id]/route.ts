@@ -13,7 +13,9 @@ export async function GET(
       include: {
         lists: {
           include: {
-            tasks: true,
+            tasks: {
+              include: { subtasks: true },
+            },
           },
         },
       },
@@ -48,7 +50,9 @@ export async function PUT(
       include: {
         lists: {
           include: {
-            tasks: true,
+            tasks: {
+              include: { subtasks: true },
+            },
           },
         },
       },

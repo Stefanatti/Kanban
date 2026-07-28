@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
 import { MenuItem, TextField } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
-import { Board, Task } from "@/app/interfaces/interfaces";
+import { Board, Task, Subtask } from "@/app/interfaces/interfaces";
 
 interface ModalProps {
   open: boolean;
@@ -19,7 +19,7 @@ interface ModalProps {
     taskName: string,
     listId?: string,
     description?: string,
-    subtasks?: string[],
+    subtasks?: { title: string }[],
   ) => Promise<void>;
   // Edit mode props
   editTask?: Task;
@@ -55,7 +55,7 @@ function AddTaskModal({
 
   const [selectedColumnStatus, setSelectedColumnStatus] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [subtasks, setSubtasks] = useState<string[]>([]);
+  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [newSubtask, setNewSubtask] = useState<string>("");
   const [addingSubtask, setAddingSubtask] = useState<boolean>(false);
   const [taskTitle, setTaskTitle] = useState<string>("");
@@ -81,7 +81,14 @@ function AddTaskModal({
 
   const handleAddSubtask = () => {
     if (newSubtask.trim()) {
-      setSubtasks([...subtasks, newSubtask.trim()]);
+      setSubtasks([
+        ...subtasks,
+        {
+          id: crypto.randomUUID(),
+          title: newSubtask.trim(),
+          isCompleted: false,
+        },
+      ]);
       setNewSubtask("");
       setAddingSubtask(false);
     }
@@ -117,7 +124,12 @@ function AddTaskModal({
           listId: targetList.id,
         });
       } else {
-        await addTask(newTaskName, targetList.id, description, subtasks);
+        await addTask(
+          newTaskName,
+          targetList.id,
+          description,
+          subtasks.map((s) => ({ title: s.title })),
+        );
         if (setNewTaskName) setNewTaskName("");
       }
 
@@ -192,7 +204,7 @@ function AddTaskModal({
 
             {subtasks.map((subtask, index) => (
               <Box
-                key={index}
+                key={subtask.id}
                 sx={{
                   display: "flex",
                   alignItems: "center",
@@ -201,10 +213,13 @@ function AddTaskModal({
               >
                 <TextField
                   size="small"
-                  value={subtask}
+                  value={subtask.title}
                   onChange={(e) => {
                     const updated = [...subtasks];
-                    updated[index] = e.target.value;
+                    updated[index] = {
+                      ...updated[index],
+                      title: e.target.value,
+                    };
                     setSubtasks(updated);
                   }}
                 />

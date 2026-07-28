@@ -8,7 +8,9 @@ export async function GET() {
       include: {
         lists: {
           include: {
-            tasks: true,
+            tasks: {
+              include: { subtasks: true },
+            },
           },
         },
       },
@@ -39,7 +41,9 @@ export async function POST(request: NextRequest) {
       include: {
         lists: {
           include: {
-            tasks: true,
+            tasks: {
+              include: { subtasks: true },
+            },
           },
         },
       },

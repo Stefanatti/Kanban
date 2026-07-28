@@ -76,7 +76,7 @@ const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
     taskName: string,
     listId?: string,
     description?: string,
-    subtasks?: string[],
+    subtasks?: { title: string }[],
   ): Promise<void> => {
     if (!taskName || !listId) return;
 

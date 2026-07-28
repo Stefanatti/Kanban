@@ -254,7 +254,11 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
                               variant="body2"
                               sx={{ color: "text.secondary", mt: 0.5 }}
                             >
-                              0 of {task.subtasks.length} subtasks
+                              {
+                                task.subtasks.filter((s) => s.isCompleted)
+                                  .length
+                              }{" "}
+                              of {task.subtasks.length} subtasks
                             </Typography>
                           )}
                         </TaskItem>

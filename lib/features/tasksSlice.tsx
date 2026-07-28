@@ -1,6 +1,13 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { Task } from "@/app/interfaces/interfaces";
 
+interface CreateTaskInput {
+  title: string;
+  listId: string;
+  description?: string;
+  subtasks?: { title: string }[];
+}
+
 export const tasksApi = createApi({
   reducerPath: "tasksApi",
   baseQuery: fetchBaseQuery({
@@ -8,7 +15,7 @@ export const tasksApi = createApi({
   }),
   tagTypes: ["Task"],
   endpoints: (builder) => ({
-    createTask: builder.mutation<Task, Partial<Task>>({
+    createTask: builder.mutation<Task, CreateTaskInput>({
       query: (newTaskData) => ({
         url: "tasks",
         method: "POST",

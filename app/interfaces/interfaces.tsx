@@ -1,9 +1,15 @@
+export interface Subtask {
+  id: string;
+  title: string;
+  isCompleted: boolean;
+}
+
 export interface Task {
   title: string;
   description?: string;
   dueDate?: Date;
   completed?: boolean;
-  subtasks?: string[];
+  subtasks?: Subtask[];
   id: string;
   listId?: string;
 }

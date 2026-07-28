@@ -11,9 +11,17 @@ export async function POST(request: NextRequest) {
         description: body.description,
         dueDate: body.dueDate ? new Date(body.dueDate) : null,
         completed: body.completed ?? false,
-        subtasks: body.subtasks ?? [],
         listId: body.listId,
+        subtasks: body.subtasks?.length
+          ? {
+              create: body.subtasks.map((s: { title: string }) => ({
+                title: s.title,
+                isCompleted: false,
+              })),
+            }
+          : undefined,
       },
+      include: { subtasks: true },
     });
     return NextResponse.json(task, { status: 201 });
   } catch (error) {

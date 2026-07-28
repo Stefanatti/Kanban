@@ -8,7 +8,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const task = await prisma.task.findUnique({ where: { id } });
+    const task = await prisma.task.findUnique({
+      where: { id },
+      include: { subtasks: true },
+    });
 
     if (!task) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
@@ -31,6 +34,23 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
+
+    // Handle subtasks: delete existing and recreate
+    if (body.subtasks !== undefined) {
+      await prisma.subtask.deleteMany({ where: { taskId: id } });
+      if (body.subtasks.length > 0) {
+        await prisma.subtask.createMany({
+          data: body.subtasks.map(
+            (s: { title: string; isCompleted?: boolean }) => ({
+              title: s.title,
+              isCompleted: s.isCompleted ?? false,
+              taskId: id,
+            }),
+          ),
+        });
+      }
+    }
+
     const task = await prisma.task.update({
       where: { id },
       data: {
@@ -42,9 +62,9 @@ export async function PATCH(
           dueDate: body.dueDate ? new Date(body.dueDate) : null,
         }),
         ...(body.completed !== undefined && { completed: body.completed }),
-        ...(body.subtasks !== undefined && { subtasks: body.subtasks }),
         ...(body.listId !== undefined && { listId: body.listId }),
       },
+      include: { subtasks: true },
     });
     return NextResponse.json(task);
   } catch {
