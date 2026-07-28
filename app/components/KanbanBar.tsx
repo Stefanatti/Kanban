@@ -75,20 +75,17 @@ const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
   const handleCreateTask = async (
     taskName: string,
     listId?: string,
+    description?: string,
+    subtasks?: string[],
   ): Promise<void> => {
     if (!taskName || !listId) return;
 
     try {
-      // Directly create the task
-      const newTask = { title: taskName, listId };
+      const newTask = { title: taskName, listId, description, subtasks };
       const createdTask = await createTask(newTask).unwrap();
-      console.log(createdTask);
-      // Update the tasks array with the new task
       setSelectedBoardTasks((prevTasks) => [...prevTasks, createdTask]);
-      console.log(selectedBoardTasks);
     } catch (err) {
       console.error("Failed to create task:", err);
-      // You might want to show an error notification here
     }
   };
 

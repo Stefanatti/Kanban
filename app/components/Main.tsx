@@ -14,6 +14,8 @@ import {
   useCreateListMutation,
   useDeleteListMutation,
 } from "@/lib/features/listsSlice";
+import { useUpdateTaskMutation } from "@/lib/features/tasksSlice";
+import AddTaskModal from "./AddTaskModal";
 import { Board, Task, List } from "@/app/interfaces/interfaces";
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -64,9 +66,45 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
   const [createList] = useCreateListMutation();
   const [deleteList] = useDeleteListMutation();
   const [updateBoard] = useUpdateBoardMutation();
+  const [updateTask] = useUpdateTaskMutation();
+
+  // Task edit modal state
+  const [editTaskModalOpen, setEditTaskModalOpen] = useState<boolean>(false);
+  const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
 
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setEditTaskModalOpen(true);
+  };
+
+  const handleCloseTaskModal = () => {
+    setEditTaskModalOpen(false);
+    setSelectedTask(undefined);
+  };
+
+  const handleUpdateTask = async (taskId: string, changes: Partial<Task>) => {
+    try {
+      await updateTask({ id: taskId, changes }).unwrap();
+      // Update local state to reflect changes
+      setSelectedBoardLists((prevLists) =>
+        prevLists.map((list) => {
+          if (!list) return list;
+          return {
+            ...list,
+            tasks: list.tasks?.map((task) =>
+              task.id === taskId ? { ...task, ...changes } : task,
+            ),
+          };
+        }),
+      );
+    } catch (err) {
+      console.error("Failed to update task:", err);
+      throw err;
+    }
+  };
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen ?? !open);
   };
@@ -203,7 +241,23 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
                       }}
                     >
                       {list?.tasks?.map((task) => (
-                        <TaskItem key={task.id}>{task.title}</TaskItem>
+                        <TaskItem
+                          key={task.id}
+                          sx={{ cursor: "pointer" }}
+                          onClick={() => handleTaskClick(task)}
+                        >
+                          <Typography sx={{ fontWeight: 600 }}>
+                            {task.title}
+                          </Typography>
+                          {task.subtasks && task.subtasks.length > 0 && (
+                            <Typography
+                              variant="body2"
+                              sx={{ color: "text.secondary", mt: 0.5 }}
+                            >
+                              0 of {task.subtasks.length} subtasks
+                            </Typography>
+                          )}
+                        </TaskItem>
                       ))}
                     </Box>
                   </Box>
@@ -270,6 +324,20 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
             deleteColumn={deleteColumn}
             setNewColumnStatus={setNewColumnStatus}
             newColumnStatus={newColumnStatus}
+          />
+        </div>
+      )}
+      {editTaskModalOpen && selectedTask && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <AddTaskModal
+            open={true}
+            handleClose={handleCloseTaskModal}
+            selectedBoard={selectedBoard}
+            addTask={async () => {}}
+            newTaskName=""
+            setNewTaskName={() => {}}
+            editTask={selectedTask}
+            onUpdateTask={handleUpdateTask}
           />
         </div>
       )}

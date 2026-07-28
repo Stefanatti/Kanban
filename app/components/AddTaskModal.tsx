@@ -1,10 +1,11 @@
-import { FC, useState } from "react";
+import { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
 import { MenuItem, TextField } from "@mui/material";
-import { Board } from "@/app/interfaces/interfaces";
+import ClearIcon from "@mui/icons-material/Clear";
+import { Board, Task } from "@/app/interfaces/interfaces";
 
 interface ModalProps {
   open: boolean;
@@ -14,7 +15,15 @@ interface ModalProps {
   setNewTaskName: (status: string) => void;
   listId?: string;
   setListId?: (id: string) => void;
-  addTask: (taskName: string, listId?: string) => Promise<void>;
+  addTask: (
+    taskName: string,
+    listId?: string,
+    description?: string,
+    subtasks?: string[],
+  ) => Promise<void>;
+  // Edit mode props
+  editTask?: Task;
+  onUpdateTask?: (taskId: string, changes: Partial<Task>) => Promise<void>;
 }
 const statuses = ["To Do", "Doing", "Done"];
 
@@ -23,9 +32,8 @@ const style = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: "80%",
-  maxWidth: 400,
-  height: 750,
+  width: "90%",
+  maxWidth: 550,
   bgcolor: "background.paper",
   border: "2px solid #000",
   borderRadius: "10px",
@@ -33,11 +41,6 @@ const style = {
   p: 4,
 };
 
-// const AddBoardModal: FC<ButtonModalProps>: React.ReactElement = ({
-//   open,
-//   handleClose,
-//   addBoards,
-// }) => {
 function AddTaskModal({
   open,
   handleClose,
@@ -45,22 +48,58 @@ function AddTaskModal({
   addTask,
   newTaskName,
   setNewTaskName,
-  listId,
-  setListId,
+  editTask,
+  onUpdateTask,
 }: ModalProps): React.ReactElement {
-  // const [newTaskName, setNewTaskName] = useState("");
-  const [selectedColumnStatus, setSelectedColumnStatus] = useState<string>("");
+  const isEditMode = !!editTask;
 
-  const handleCreateNewTask = async (
-    event: React.FormEvent<HTMLFormElement>,
-  ) => {
+  const [selectedColumnStatus, setSelectedColumnStatus] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [subtasks, setSubtasks] = useState<string[]>([]);
+  const [newSubtask, setNewSubtask] = useState<string>("");
+  const [addingSubtask, setAddingSubtask] = useState<boolean>(false);
+  const [taskTitle, setTaskTitle] = useState<string>("");
+
+  // Pre-fill fields when editing
+  useEffect(() => {
+    if (editTask) {
+      setTaskTitle(editTask.title);
+      setDescription(editTask.description || "");
+      setSubtasks(editTask.subtasks || []);
+      // Find which list this task belongs to
+      const taskList = selectedBoard?.lists?.find((list) =>
+        list.tasks?.some((t) => t.id === editTask.id),
+      );
+      setSelectedColumnStatus(taskList?.title || "");
+    } else {
+      setTaskTitle("");
+      setDescription("");
+      setSubtasks([]);
+      setSelectedColumnStatus("");
+    }
+  }, [editTask, selectedBoard]);
+
+  const handleAddSubtask = () => {
+    if (newSubtask.trim()) {
+      setSubtasks([...subtasks, newSubtask.trim()]);
+      setNewSubtask("");
+      setAddingSubtask(false);
+    }
+  };
+
+  const handleRemoveSubtask = (index: number) => {
+    setSubtasks(subtasks.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!newTaskName.trim() || !selectedColumnStatus.trim()) {
+    const title = isEditMode ? taskTitle : newTaskName;
+
+    if (!title.trim() || !selectedColumnStatus.trim()) {
       alert("Task name and status are required!");
       return;
     }
 
-    // Find the list ID based on status
     const targetList = selectedBoard?.lists?.find(
       (list) => list.title === selectedColumnStatus,
     );
@@ -70,20 +109,28 @@ function AddTaskModal({
     }
 
     try {
-      // Create the task
-      await addTask(newTaskName, targetList.id);
+      if (isEditMode && onUpdateTask && editTask) {
+        await onUpdateTask(editTask.id, {
+          title: taskTitle,
+          description,
+          subtasks,
+          listId: targetList.id,
+        });
+      } else {
+        await addTask(newTaskName, targetList.id, description, subtasks);
+        if (setNewTaskName) setNewTaskName("");
+      }
 
-      // Reset form
-      if (setNewTaskName) setNewTaskName("");
       setSelectedColumnStatus("");
-
-      // Close modal after success
+      setDescription("");
+      setSubtasks([]);
       handleClose();
     } catch (error) {
-      console.error("Failed to create task:", error);
-      alert("Failed to create task. Please try again.");
+      console.error("Failed to save task:", error);
+      alert("Failed to save task. Please try again.");
     }
   };
+
   return (
     <Modal
       open={open}
@@ -93,99 +140,147 @@ function AddTaskModal({
     >
       <Box sx={style}>
         <Typography id="modal-modal-title" variant="h5" component="h2">
-          Add a new task
+          {isEditMode ? "Edit Task" : "Add a new task"}
         </Typography>
         <Box
           component="form"
-          onSubmit={handleCreateNewTask}
+          onSubmit={handleSubmit}
           sx={{
-            "& .MuiTextField-root": { m: 2, width: "50ch" },
-            // display: "flex",
-            // flexDirection: "column",
+            "& .MuiTextField-root": { my: 0.5, width: "100%" },
+            display: "flex",
+            flexDirection: "column",
+            gap: 1.5,
           }}
           noValidate
           autoComplete="off"
         >
           <Box>
-            <Typography id="modal-modal-title" variant="h6" component="h2">
+            <Typography variant="h6" component="h2">
               Title
             </Typography>
-
             <TextField
-              sx={{ width: 400, maxWidth: "100%" }}
-              label="new task"
-              id="outlined-size-small"
+              label="Task name"
               size="small"
               type="text"
-              value={newTaskName}
-              onChange={(e) => setNewTaskName && setNewTaskName(e.target.value)}
+              value={isEditMode ? taskTitle : newTaskName}
+              onChange={(e) =>
+                isEditMode
+                  ? setTaskTitle(e.target.value)
+                  : setNewTaskName && setNewTaskName(e.target.value)
+              }
             />
           </Box>
+
           <Box>
-            <Typography id="modal-modal-title" variant="h6" component="h2">
+            <Typography variant="h6" component="h2">
               Description
             </Typography>
-
             <TextField
-              sx={{ width: 350, maxWidth: "100%" }}
-              label="Size"
-              id="outlined-size-small"
-              defaultValue="Small"
-              size="small"
+              label="Description"
+              multiline
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g. It's always good to take a break..."
             />
-            {/*   <TextField
-              sx={{ width: 350, maxWidth: "100%" }}
-              label="Size"
-              id="outlined-size-small"
-              defaultValue="Small"
-              size="small"
-            /> */}
           </Box>
+
           <Box>
-            <Typography id="modal-modal-title" variant="h6" component="h2">
+            <Typography variant="h6" component="h2">
               Subtasks
             </Typography>
 
-            <TextField
-              sx={{ width: 350, maxWidth: "100%" }}
-              label="Subtask"
-              id="outlined-size-small"
-              defaultValue="Small"
-              size="small"
-            />
+            {subtasks.map((subtask, index) => (
+              <Box
+                key={index}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
+                <TextField
+                  size="small"
+                  value={subtask}
+                  onChange={(e) => {
+                    const updated = [...subtasks];
+                    updated[index] = e.target.value;
+                    setSubtasks(updated);
+                  }}
+                />
+                <ClearIcon
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => handleRemoveSubtask(index)}
+                />
+              </Box>
+            ))}
 
-            <TextField
-              sx={{ width: 350, maxWidth: "100%" }}
-              label="Description"
-              id="outlined-size-small"
-              defaultValue="Small"
-              size="small"
-            />
+            {addingSubtask && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
+                <TextField
+                  label="New subtask"
+                  size="small"
+                  value={newSubtask}
+                  autoFocus
+                  onChange={(e) => setNewSubtask(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddSubtask();
+                    }
+                  }}
+                />
+                <ClearIcon
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => {
+                    setAddingSubtask(false);
+                    setNewSubtask("");
+                  }}
+                />
+              </Box>
+            )}
           </Box>
+
           <Box
-            sx={{ display: "flex", flexDirection: "column", gap: "10px", m: 3 }}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              mt: 1,
+            }}
           >
-            <Button sx={{ borderRadius: "20px" }} variant="contained">
+            <Button
+              sx={{ borderRadius: "20px" }}
+              variant="contained"
+              onClick={() => {
+                if (addingSubtask) {
+                  handleAddSubtask();
+                } else {
+                  setAddingSubtask(true);
+                }
+              }}
+            >
               + Add a New Subtask
             </Button>
           </Box>
+
           <Box>
-            <Typography id="modal-modal-title" variant="h6" component="h2">
+            <Typography variant="h6" component="h2">
               Status
             </Typography>
-
             <TextField
-              id="outlined-select-currency"
+              id="outlined-select-status"
               select
               label="Select"
-              // label={column.title}
-              //defaultValue="To Do"
               value={selectedColumnStatus}
               helperText="Please select your column status"
-              onChange={(e) =>
-                setSelectedColumnStatus &&
-                setSelectedColumnStatus(e.target.value)
-              }
+              onChange={(e) => setSelectedColumnStatus(e.target.value)}
             >
               {statuses.map((status, index) => (
                 <MenuItem key={index} value={status}>
@@ -194,15 +289,21 @@ function AddTaskModal({
               ))}
             </TextField>
           </Box>
+
           <Box
-            sx={{ display: "flex", flexDirection: "column", gap: "10px", m: 3 }}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              mt: 1,
+            }}
           >
             <Button
               sx={{ borderRadius: "20px" }}
               variant="contained"
               type="submit"
             >
-              + Create New Task
+              {isEditMode ? "Save Changes" : "+ Create New Task"}
             </Button>
           </Box>
         </Box>
