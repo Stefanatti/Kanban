@@ -30,9 +30,18 @@ export async function POST(request: NextRequest) {
     const board = await prisma.board.create({
       data: {
         title: body.title,
+        lists: body.columns?.length
+          ? {
+              create: body.columns.map((col: string) => ({ title: col })),
+            }
+          : undefined,
       },
       include: {
-        lists: true,
+        lists: {
+          include: {
+            tasks: true,
+          },
+        },
       },
     });
     return NextResponse.json(board, { status: 201 });

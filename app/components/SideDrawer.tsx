@@ -28,12 +28,18 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
   const [createBoard, { isLoading, isError, isSuccess }] =
     useCreateBoardMutation();
 
-  const handleCreateBoard = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateBoard = async (
+    event: React.FormEvent<HTMLFormElement>,
+    columns: string[]
+  ) => {
     event.preventDefault();
     try {
-      const newBoard = { title: boardName } as Partial<Board>;
-      await createBoard(newBoard).unwrap(); // `unwrap` handles errors gracefully
+      const newBoard = { title: boardName, columns } as Partial<Board> & {
+        columns: string[];
+      };
+      await createBoard(newBoard).unwrap();
       setBoardName("");
+      handleCloseModal();
     } catch (err) {
       console.error("Failed to create board:", err);
     }

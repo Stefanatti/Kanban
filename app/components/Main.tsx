@@ -140,7 +140,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
 
   return (
     <Container maxWidth="xl">
-      {!boards ? (
+      {!selectedBoard ? (
         <Box
           sx={{
             height: "100vh",
@@ -149,22 +149,11 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
             alignItems: "center",
           }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            {" "}
-            <Stack spacing={2}>
-              <Typography>
-                This board is empty. Create a new column to get started
-              </Typography>
-              <Button sx={{ borderRadius: "20px" }} variant="contained">
-                + Add a new column
-              </Button>
-            </Stack>
-          </Box>
+          <Stack spacing={2} alignItems="center">
+            <Typography>
+              Select a board from the sidebar or create a new one
+            </Typography>
+          </Stack>
         </Box>
       ) : (
         <Box
@@ -243,22 +232,24 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
           ) : (
             <Box
               sx={{
-                width: "330px",
-                height: "95%",
-                mt: 3,
-                backgroundColor: "#f5f5f5",
-                boxShadow: 1,
-                borderRadius: 2,
-                p: 2,
+                height: "100%",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
               }}
             >
-              {" "}
-              <Typography onClick={handleEditBoardClick}>
-                + New Column
-              </Typography>
+              <Stack spacing={2} alignItems="center">
+                <Typography>
+                  This board is empty. Create a new column to get started
+                </Typography>
+                <Button
+                  sx={{ borderRadius: "20px" }}
+                  variant="contained"
+                  onClick={handleOpenModal}
+                >
+                  + Add New Column
+                </Button>
+              </Stack>
             </Box>
           )}
         </Box>

@@ -3,13 +3,16 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
-import { TextField } from "@mui/material";
+import { MenuItem, TextField } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 
 interface AddBoardModalProps {
   open: boolean;
   handleClose: () => void;
-  createBoard: (event: React.FormEvent<HTMLFormElement>) => Promise<void>;
+  createBoard: (
+    event: React.FormEvent<HTMLFormElement>,
+    columns: string[]
+  ) => Promise<void>;
   boardName: string;
   setBoardName: (title: string) => void;
 }
@@ -21,13 +24,15 @@ const style = {
   transform: "translate(-50%, -50%)",
   width: "80%",
   maxWidth: 400,
-  height: 350,
+  minHeight: 350,
   bgcolor: "background.paper",
   border: "2px solid #000",
   borderRadius: "10px",
   boxShadow: 24,
   p: 4,
 };
+
+const availableStatuses = ["To Do", "Doing", "Done"];
 
 function AddBoardModal({
   open,
@@ -36,9 +41,26 @@ function AddBoardModal({
   boardName,
   setBoardName,
 }: AddBoardModalProps): React.ReactElement {
-  const [addNewColumn, setAddNewColumn] = useState(false);
+  const [columns, setColumns] = useState<string[]>(["To Do", "Doing"]);
+  const [addingNew, setAddingNew] = useState(false);
+  const [newColumnStatus, setNewColumnStatus] = useState("");
 
-  const [newColumn, setNewColumn] = useState("");
+  const handleRemoveColumn = (index: number) => {
+    setColumns(columns.filter((_, i) => i !== index));
+  };
+
+  const handleAddColumn = () => {
+    if (newColumnStatus && !columns.includes(newColumnStatus)) {
+      setColumns([...columns, newColumnStatus]);
+      setNewColumnStatus("");
+      setAddingNew(false);
+    }
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    createBoard(event, columns);
+  };
 
   return (
     <Modal
@@ -53,9 +75,8 @@ function AddBoardModal({
         </Typography>
         <Box
           component="form"
-          onSubmit={createBoard}
+          onSubmit={handleSubmit}
           sx={{ "& .MuiTextField-root": { m: 2, width: "50ch" } }}
-          //sx={{ display: "flex", flexDirection: "column" }}
           noValidate
           autoComplete="off"
         >
@@ -79,8 +100,9 @@ function AddBoardModal({
               Board columns
             </Typography>
 
-            {addNewColumn && (
+            {columns.map((col, index) => (
               <Box
+                key={index}
                 sx={{
                   display: "flex",
                   justifyContent: "flex-start",
@@ -89,22 +111,51 @@ function AddBoardModal({
               >
                 <TextField
                   sx={{ width: 350, maxWidth: "100%" }}
-                  label="Size"
-                  id="outlined-size-small"
-                  defaultValue="Small"
                   size="small"
+                  value={col}
+                  disabled
                 />
-                <ClearIcon />
+                <ClearIcon
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => handleRemoveColumn(index)}
+                />
+              </Box>
+            ))}
+
+            {addingNew && (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                }}
+              >
+                <TextField
+                  id="new-column-select"
+                  select
+                  label="Select column"
+                  size="small"
+                  value={newColumnStatus}
+                  onChange={(e) => setNewColumnStatus(e.target.value)}
+                  helperText="Select a column status"
+                >
+                  {availableStatuses
+                    .filter((s) => !columns.includes(s))
+                    .map((status) => (
+                      <MenuItem key={status} value={status}>
+                        {status}
+                      </MenuItem>
+                    ))}
+                </TextField>
+                <Button size="small" onClick={handleAddColumn}>
+                  Add
+                </Button>
+                <ClearIcon
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => setAddingNew(false)}
+                />
               </Box>
             )}
-            {/* 
-            <TextField
-              sx={{ width: 350, maxWidth: "100%" }}
-              label="Size"
-              id="outlined-size-small"
-              defaultValue="Small"
-              size="small"
-            /> */}
           </Box>
           <Box
             sx={{ display: "flex", flexDirection: "column", gap: "10px", m: 3 }}
@@ -112,7 +163,8 @@ function AddBoardModal({
             <Button
               sx={{ borderRadius: "20px" }}
               variant="contained"
-              onClick={() => setAddNewColumn(true)}
+              onClick={() => setAddingNew(true)}
+              disabled={columns.length >= availableStatuses.length}
             >
               + Add a New Column
             </Button>
