@@ -57,27 +57,54 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
   };
 
   const sideBarList = (
-    <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
+    <Box sx={{ width: 350 }} role="presentation" onClick={toggleDrawer(false)}>
       <List>
         <ListItem>
-          <Typography>All Boards (0)</Typography>
+          <Typography>All Boards ({boards?.length ?? 0})</Typography>
         </ListItem>
         <Divider />
 
         {boards?.map((board) => (
           <ListItem key={board.id} disablePadding>
-            <ListItemButton onClick={() => onBoardSelect(board.id)}>
+            <ListItemButton
+              onClick={() => onBoardSelect(board.id)}
+              sx={{
+                borderRadius: "0 20px 20px 0",
+                mr: 2,
+                py: 1.2,
+                "&:hover": {
+                  backgroundColor: "primary.main",
+                  color: "#fff",
+                  "& .MuiListItemIcon-root": { color: "#fff" },
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>
+                <InboxIcon fontSize="small" />
+              </ListItemIcon>
               <ListItemText primary={board.title} />
             </ListItemButton>
           </ListItem>
         ))}
-        <ListItem>
-          <ListItemButton onClick={handleCreateBoardClick}>
-            <ListItemIcon>
-              {<InboxIcon />}
-
-              <Typography>+ Create new board</Typography>
+        <ListItem disablePadding>
+          <ListItemButton
+            onClick={handleCreateBoardClick}
+            sx={{
+              borderRadius: "0 20px 20px 0",
+              mr: 2,
+              py: 1.2,
+              color: "primary.main",
+              "&:hover": {
+                backgroundColor: "primary.main",
+                color: "#fff",
+                "& .MuiListItemIcon-root": { color: "#fff" },
+              },
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 36, color: "primary.main" }}>
+              <InboxIcon fontSize="small" />
             </ListItemIcon>
+            <ListItemText primary="+ Create New Board" />
           </ListItemButton>
         </ListItem>
       </List>

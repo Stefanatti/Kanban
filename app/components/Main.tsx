@@ -13,6 +13,7 @@ import EditBoardModal from "./EditBoardModal";
 import {
   useCreateListMutation,
   useDeleteListMutation,
+  useUpdateListMutation,
 } from "@/lib/features/listsSlice";
 import { useUpdateTaskMutation } from "@/lib/features/tasksSlice";
 import AddTaskModal from "./AddTaskModal";
@@ -44,14 +45,11 @@ const TaskItem = styled(Paper)(({ theme }) => ({
 
 interface MainProps {
   selectedBoard: Board | undefined;
+  onRegisterEditBoard?: (fn: () => void) => void;
 }
 
-const Main: FC<MainProps> = ({ selectedBoard }) => {
+const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
   const [open, setOpen] = useState<boolean>(false);
-
-  const [columnName, setColumnName] = useState<string>("");
-  const [newColumnStatus, setNewColumnStatus] = useState<string>(""); // For new column selection
-
   const [openModal, setOpenModal] = useState<boolean>(false);
   const { data: boards, isLoading, isError } = useGetBoardsQuery();
   const [selectedBoardTitle, setSelectedBoardTitle] = useState<
@@ -65,6 +63,7 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
 
   const [createList] = useCreateListMutation();
   const [deleteList] = useDeleteListMutation();
+  const [updateList] = useUpdateListMutation();
   const [updateBoard] = useUpdateBoardMutation();
   const [updateTask] = useUpdateTaskMutation();
 
@@ -74,6 +73,13 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
 
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
+
+  // Register the edit board opener so KanbanBar can trigger it
+  useEffect(() => {
+    if (onRegisterEditBoard) {
+      onRegisterEditBoard(handleOpenModal);
+    }
+  }, [onRegisterEditBoard]);
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -122,57 +128,61 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
     handleOpenModal();
   };
 
-  const handleAddColumn = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!newColumnStatus) {
-      console.error("No column status selected!");
-      return;
-    }
-
-    const updatePromises = [];
+  const handleSaveBoard = async (data: {
+    boardName: string;
+    columnsToKeep: { id: string; title: string }[];
+    columnsToAdd: string[];
+    columnsToDelete: string[];
+  }) => {
+    if (!boardId) return;
 
     try {
-      if (newColumnStatus && boardId) {
-        // const newColumn = { title: columnName, boardId };
-        const newColumn = {
-          title: newColumnStatus as "To Do" | "Doing" | "Done",
-          status: newColumnStatus,
-          boardId,
-        };
-
-        const newList = await createList(newColumn).unwrap();
-
-        setSelectedBoardLists((prevLists) => [...prevLists, newList]);
-
-        // setColumnName("");
-        setNewColumnStatus("To Do");
-      }
-
-      if (selectedBoardTitle && boardId) {
-        const boardUpdate = updateBoard({
+      // 1. Update board name if changed
+      if (data.boardName !== selectedBoardTitle) {
+        await updateBoard({
           id: boardId,
-          changes: { title: selectedBoardTitle },
+          changes: { title: data.boardName },
         }).unwrap();
-        updatePromises.push(boardUpdate);
+        setSelectedBoardTitle(data.boardName);
       }
 
-      await Promise.all(updatePromises);
+      // 2. Delete removed columns
+      for (const colId of data.columnsToDelete) {
+        await deleteList(colId).unwrap();
+      }
 
-      setSelectedBoardTitle(selectedBoardTitle);
-    } catch (err) {
-      console.error("Failed to submit changes:", err);
-    }
-  };
+      // 3. Rename existing columns if title changed
+      for (const col of data.columnsToKeep) {
+        const original = selectedBoardLists.find((l) => l?.id === col.id);
+        if (original && original.title !== col.title) {
+          await updateList({
+            id: col.id,
+            changes: { title: col.title },
+          }).unwrap();
+        }
+      }
 
-  const deleteColumn = async (columnId: string) => {
-    try {
-      await deleteList(columnId).unwrap();
-      const newLists = selectedBoardLists.filter(
-        (list) => list?.id !== columnId,
-      );
-      setSelectedBoardLists(newLists);
+      // 4. Create new columns
+      const newLists = [];
+      for (const title of data.columnsToAdd) {
+        const newList = await createList({ title, boardId }).unwrap();
+        newLists.push(newList);
+      }
+
+      // 5. Update local state to reflect all changes
+      const updatedLists = selectedBoardLists
+        .filter((list) => list && !data.columnsToDelete.includes(list.id))
+        .map((list) => {
+          if (!list) return list;
+          const kept = data.columnsToKeep.find((c) => c.id === list.id);
+          if (kept) return { ...list, title: kept.title };
+          return list;
+        });
+
+      setSelectedBoardLists([...updatedLists, ...newLists]);
     } catch (err) {
-      console.error("Failed to delete column:", err);
+      console.error("Failed to save board changes:", err);
+      throw err;
     }
   };
 
@@ -220,10 +230,33 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
                       display: "flex",
                       flexDirection: "column",
                       gap: "10px",
+                      minWidth: "330px",
                     }}
                   >
-                    <Box>
-                      <Typography sx={{ textAlign: "center" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: "50%",
+                          backgroundColor:
+                            list?.title?.toLowerCase() === "to do"
+                              ? "#87CEEB"
+                              : list?.title?.toLowerCase() === "doing"
+                                ? "#9B59B6"
+                                : list?.title?.toLowerCase() === "done"
+                                  ? "#90EE90"
+                                  : "#87CEEB",
+                        }}
+                      />
+                      <Typography sx={{ fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", fontSize: "0.8rem" }}>
                         {list?.title}
                       </Typography>
                     </Box>
@@ -268,22 +301,38 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
                 ))}
                 <Box
                   sx={{
-                    width: "330px",
-                    height: "95%",
-                    mt: 3,
-                    backgroundColor: "#f5f5f5",
-                    boxShadow: 1,
-                    borderRadius: 2,
-                    p: 2,
                     display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
+                    flexDirection: "column",
+                    gap: "10px",
+                    minWidth: "330px",
                   }}
                 >
-                  {" "}
-                  <Typography onClick={handleEditBoardClick}>
-                    + New Column
-                  </Typography>
+                  <Box sx={{ height: "24px" }} />
+                  <Box
+                    sx={{
+                      minWidth: "330px",
+                      height: "95%",
+                      backgroundColor: "#f5f5f5",
+                      boxShadow: 1,
+                      borderRadius: 2,
+                      p: 2,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                    onClick={handleEditBoardClick}
+                  >
+                    <Typography
+                      sx={{
+                        fontWeight: 600,
+                        color: "grey.500",
+                        fontSize: "1.2rem",
+                      }}
+                    >
+                      + New Column
+                    </Typography>
+                  </Box>
                 </Box>
               </Box>
             </>
@@ -317,17 +366,11 @@ const Main: FC<MainProps> = ({ selectedBoard }) => {
           <EditBoardModal
             open={true}
             handleClose={handleCloseModal}
-            addColumn={handleAddColumn}
-            boardCollumns={selectedBoardLists.filter(
+            boardName={selectedBoardTitle || ""}
+            boardColumns={selectedBoardLists.filter(
               (list): list is List => list !== undefined,
             )}
-            boardName={selectedBoardTitle}
-            setBoardName={setSelectedBoardTitle}
-            columnName={columnName}
-            setColumnName={setColumnName}
-            deleteColumn={deleteColumn}
-            setNewColumnStatus={setNewColumnStatus}
-            newColumnStatus={newColumnStatus}
+            onSave={handleSaveBoard}
           />
         </div>
       )}

@@ -19,14 +19,17 @@ import MoreIcon from "@mui/icons-material/MoreVert";
 import { useCreateTaskMutation } from "@/lib/features/tasksSlice";
 import { Board, Task } from "@/app/interfaces/interfaces";
 
-const pages = ["Products", "Pricing", "Blog"];
-const settings = ["Profile", "Account", "Dashboard", "Logout"];
-
 interface KanbanBarProps {
   selectedBoard: Board | undefined;
+  onEditBoard?: () => void;
+  onDeleteBoard?: () => void;
 }
 
-const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
+const KanbanBar: FC<KanbanBarProps> = ({
+  selectedBoard,
+  onEditBoard,
+  onDeleteBoard,
+}) => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [openModal, setOpenModal] = useState(false);
@@ -287,11 +290,25 @@ const KanbanBar: FC<KanbanBarProps> = ({ selectedBoard }) => {
                 open={Boolean(anchorElUser)}
                 onClose={handleCloseUserMenu}
               >
-                {settings.map((setting) => (
-                  <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                    <Typography textAlign="center">{setting}</Typography>
-                  </MenuItem>
-                ))}
+                  <MenuItem
+                  onClick={() => {
+                    handleCloseUserMenu();
+                    onEditBoard?.();
+                  }}
+                  disabled={!selectedBoard}
+                >
+                  <Typography textAlign="center">Edit Board</Typography>
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleCloseUserMenu();
+                    onDeleteBoard?.();
+                  }}
+                  disabled={!selectedBoard}
+                  sx={{ color: "error.main" }}
+                >
+                  <Typography textAlign="center">Delete Board</Typography>
+                </MenuItem>
               </Menu>
             </Box>
           </Toolbar>
