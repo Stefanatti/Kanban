@@ -15,8 +15,13 @@ import {
   useDeleteListMutation,
   useUpdateListMutation,
 } from "@/lib/features/listsSlice";
-import { useUpdateTaskMutation } from "@/lib/features/tasksSlice";
+import {
+  useUpdateTaskMutation,
+  useDeleteTaskMutation,
+} from "@/lib/features/tasksSlice";
 import AddTaskModal from "./AddTaskModal";
+import ViewTaskModal from "./ViewTaskModal";
+import DeleteTaskModal from "./DeleteTaskModal";
 import { Board, Task, List } from "@/app/interfaces/interfaces";
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -66,9 +71,12 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
   const [updateList] = useUpdateListMutation();
   const [updateBoard] = useUpdateBoardMutation();
   const [updateTask] = useUpdateTaskMutation();
+  const [deleteTaskMutation] = useDeleteTaskMutation();
 
-  // Task edit modal state
+  // Task modal states
+  const [viewTaskModalOpen, setViewTaskModalOpen] = useState(false);
   const [editTaskModalOpen, setEditTaskModalOpen] = useState<boolean>(false);
+  const [deleteTaskModalOpen, setDeleteTaskModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
 
   const handleOpenModal = () => setOpenModal(true);
@@ -83,12 +91,116 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
-    setEditTaskModalOpen(true);
+    setViewTaskModalOpen(true);
+  };
+
+  const handleCloseViewTaskModal = () => {
+    setViewTaskModalOpen(false);
+    setSelectedTask(undefined);
   };
 
   const handleCloseTaskModal = () => {
     setEditTaskModalOpen(false);
     setSelectedTask(undefined);
+  };
+
+  const handleOpenEditFromView = () => {
+    // Close view modal but keep selectedTask, then open edit
+    setViewTaskModalOpen(false);
+    setEditTaskModalOpen(true);
+  };
+
+  const handleOpenDeleteFromView = () => {
+    // Close view modal but keep selectedTask, then open delete confirmation
+    setViewTaskModalOpen(false);
+    setDeleteTaskModalOpen(true);
+  };
+
+  const handleToggleSubtask = async (
+    subtaskId: string,
+    isCompleted: boolean,
+  ) => {
+    try {
+      await fetch(`/api/subtasks/${subtaskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isCompleted }),
+      });
+      // Update local state
+      setSelectedBoardLists((prevLists) =>
+        prevLists.map((list) => {
+          if (!list) return list;
+          return {
+            ...list,
+            tasks: list.tasks?.map((task) => {
+              if (task.id !== selectedTask?.id) return task;
+              return {
+                ...task,
+                subtasks: task.subtasks?.map((s) =>
+                  s.id === subtaskId ? { ...s, isCompleted } : s,
+                ),
+              };
+            }),
+          };
+        }),
+      );
+    } catch (err) {
+      console.error("Failed to toggle subtask:", err);
+      throw err;
+    }
+  };
+
+  const handleChangeStatus = async (taskId: string, newListId: string) => {
+    try {
+      await updateTask({ id: taskId, changes: { listId: newListId } }).unwrap();
+      // Move task between columns in local state
+      setSelectedBoardLists((prevLists) => {
+        let movedTask: Task | undefined;
+        // Remove from old column
+        const withoutTask = prevLists.map((list) => {
+          if (!list) return list;
+          const found = list.tasks?.find((t) => t.id === taskId);
+          if (found) movedTask = { ...found, listId: newListId };
+          return {
+            ...list,
+            tasks: list.tasks?.filter((t) => t.id !== taskId),
+          };
+        });
+        // Add to new column
+        if (!movedTask) return prevLists;
+        return withoutTask.map((list) => {
+          if (!list) return list;
+          if (list.id === newListId) {
+            return { ...list, tasks: [...(list.tasks || []), movedTask!] };
+          }
+          return list;
+        });
+      });
+    } catch (err) {
+      console.error("Failed to change task status:", err);
+      throw err;
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!selectedTask) return;
+    try {
+      await deleteTaskMutation(selectedTask.id).unwrap();
+      // Remove from local state
+      setSelectedBoardLists((prevLists) =>
+        prevLists.map((list) => {
+          if (!list) return list;
+          return {
+            ...list,
+            tasks: list.tasks?.filter((t) => t.id !== selectedTask.id),
+          };
+        }),
+      );
+      setDeleteTaskModalOpen(false);
+      setSelectedTask(undefined);
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+    }
   };
 
   const handleUpdateTask = async (taskId: string, changes: Partial<Task>) => {
@@ -381,6 +493,22 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
           />
         </div>
       )}
+      {viewTaskModalOpen && selectedTask && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ViewTaskModal
+            open={true}
+            handleClose={handleCloseViewTaskModal}
+            task={selectedTask}
+            columns={selectedBoardLists.filter(
+              (list): list is List => list !== undefined,
+            )}
+            onToggleSubtask={handleToggleSubtask}
+            onChangeStatus={handleChangeStatus}
+            onEditTask={handleOpenEditFromView}
+            onDeleteTask={handleOpenDeleteFromView}
+          />
+        </div>
+      )}
       {editTaskModalOpen && selectedTask && (
         <div onClick={(e) => e.stopPropagation()}>
           <AddTaskModal
@@ -392,6 +520,19 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
             setNewTaskName={() => {}}
             editTask={selectedTask}
             onUpdateTask={handleUpdateTask}
+          />
+        </div>
+      )}
+      {deleteTaskModalOpen && selectedTask && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <DeleteTaskModal
+            open={true}
+            handleClose={() => {
+              setDeleteTaskModalOpen(false);
+              setSelectedTask(undefined);
+            }}
+            taskName={selectedTask.title}
+            onDelete={handleDeleteTask}
           />
         </div>
       )}
