@@ -256,7 +256,14 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                                   : "#87CEEB",
                         }}
                       />
-                      <Typography sx={{ fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", fontSize: "0.8rem" }}>
+                      <Typography
+                        sx={{
+                          fontWeight: 600,
+                          letterSpacing: 1,
+                          textTransform: "uppercase",
+                          fontSize: "0.8rem",
+                        }}
+                      >
                         {list?.title}
                       </Typography>
                     </Box>

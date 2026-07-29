@@ -290,7 +290,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
                 open={Boolean(anchorElUser)}
                 onClose={handleCloseUserMenu}
               >
-                  <MenuItem
+                <MenuItem
                   onClick={() => {
                     handleCloseUserMenu();
                     onEditBoard?.();
