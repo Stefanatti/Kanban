@@ -129,7 +129,10 @@ const KanbanBar: FC<KanbanBarProps> = ({
 
   return (
     <>
-      <AppBar position="static">
+      <AppBar
+        position="static"
+        sx={{ backgroundColor: "background.paper", color: "text.primary" }}
+      >
         <Container maxWidth="xl">
           <Toolbar disableGutters>
             <AdbIcon sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
@@ -138,15 +141,15 @@ const KanbanBar: FC<KanbanBarProps> = ({
               noWrap
               component="a"
               href="#app-bar-with-responsive-menu"
-              sx={{
-                mr: 2,
-                display: { xs: "none", md: "flex" },
-                fontFamily: "monospace",
-                fontWeight: 700,
-                letterSpacing: ".3rem",
-                color: "inherit",
-                textDecoration: "none",
-              }}
+              // sx={{
+              //   mr: 2,
+              //   display: { xs: "none", md: "flex" },
+              //   fontFamily: "monospace",
+              //   fontWeight: 700,
+              //   letterSpacing: ".3rem",
+              //   color: "inherit",
+              //   textDecoration: "none",
+              // }}
             >
               Kanban
             </Typography>

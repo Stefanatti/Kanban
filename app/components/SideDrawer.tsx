@@ -8,11 +8,14 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
-import { Drawer, Typography } from "@mui/material";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import { Drawer, Switch, Typography } from "@mui/material";
 import AddBoardModal from "./AddBoardModal";
 import DrawerButton from "./DrawerButton";
 import { useCreateBoardMutation } from "@/lib/features/boardSlice";
 import { Board } from "@/app/interfaces/interfaces";
+import { useThemeMode } from "@/app/ThemeContext";
 
 interface DrawerProps {
   // toggleDrawer: (open: boolean) => () => void;
@@ -27,6 +30,7 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
   const [boardName, setBoardName] = useState<string>("");
   const [createBoard, { isLoading, isError, isSuccess }] =
     useCreateBoardMutation();
+  const { mode, toggleTheme } = useThemeMode();
 
   const handleCreateBoard = async (
     event: React.FormEvent<HTMLFormElement>,
@@ -57,7 +61,17 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
   };
 
   const sideBarList = (
-    <Box sx={{ width: 350 }} role="presentation" onClick={toggleDrawer(false)}>
+    <Box
+      sx={{
+        width: 320,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        height: "90%",
+      }}
+      role="presentation"
+      onClick={toggleDrawer(false)}
+    >
       <List>
         <ListItem>
           <Typography>All Boards ({boards?.length ?? 0})</Typography>
@@ -65,7 +79,7 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
         <Divider />
 
         {boards?.map((board) => (
-          <ListItem key={board.id} disablePadding>
+          <ListItem key={board.id} disablePadding sx={{ mb: 0.5, mt: 2 }}>
             <ListItemButton
               onClick={() => onBoardSelect(board.id)}
               sx={{
@@ -82,7 +96,10 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
               <ListItemIcon sx={{ minWidth: 36 }}>
                 <InboxIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText primary={board.title} />
+              <ListItemText
+                primary={board.title}
+                primaryTypographyProps={{ fontWeight: 700, fontSize: "15px" }}
+              />
             </ListItemButton>
           </ListItem>
         ))}
@@ -104,7 +121,10 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
             <ListItemIcon sx={{ minWidth: 36, color: "primary.main" }}>
               <InboxIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText primary="+ Create New Board" />
+            <ListItemText
+              primary="+ Create New Board"
+              primaryTypographyProps={{ fontWeight: 700, fontSize: "15px" }}
+            />
           </ListItemButton>
         </ListItem>
       </List>
@@ -119,6 +139,32 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
           />
         </div>
       )}
+
+      {/* Theme Toggle */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 2,
+          mx: 2,
+          mt: 3,
+          mb: 2,
+          py: 1.5,
+          borderRadius: "6px",
+          backgroundColor: "background.default",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <LightModeIcon sx={{ color: "#828FA3", fontSize: 20 }} />
+        <Switch
+          checked={mode === "dark"}
+          onChange={toggleTheme}
+          color="primary"
+          size="small"
+        />
+        <DarkModeIcon sx={{ color: "#828FA3", fontSize: 20 }} />
+      </Box>
     </Box>
   );
 

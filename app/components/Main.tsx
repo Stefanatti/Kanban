@@ -387,7 +387,7 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                       sx={{
                         minWidth: "330px",
                         height: "95%",
-                        backgroundColor: "#f5f5f5",
+                        //backgroundColor: "#d33cc6",
                         boxShadow: 1,
                         borderRadius: 2,
                         padding: 2,
@@ -399,7 +399,15 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                       {list?.tasks?.map((task) => (
                         <TaskItem
                           key={task.id}
-                          sx={{ cursor: "pointer" }}
+                          sx={{
+                            cursor: "pointer",
+                            minHeight: "80px",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            backgroundColor: "background.paper",
+                            "&:hover": { backgroundColor: "action.hover" },
+                          }}
                           onClick={() => handleTaskClick(task)}
                         >
                           <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -435,7 +443,8 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                     sx={{
                       minWidth: "330px",
                       height: "95%",
-                      backgroundColor: "#f5f5f5",
+                      backgroundColor: (theme) =>
+                        theme.palette.mode === "dark" ? "#3E3F4E" : "#E4EBFA",
                       boxShadow: 1,
                       borderRadius: 2,
                       p: 2,

@@ -12,9 +12,9 @@ const DrawerButton: React.FC<ButtonDrawerProps> = ({ toggleDrawer }) => {
         onClick={toggleDrawer(true)}
         sx={{
           borderRadius: "0 50px 50px 0",
-          backgroundColor: "red",
+          backgroundColor: "primary.main",
           "&:hover": {
-            backgroundColor: "green",
+            backgroundColor: "primary.dark",
           },
           width: "40px",
           height: "40px",

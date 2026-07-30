@@ -5,6 +5,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 
 import StoreProvider from "./StoreProvider";
 import ThemeRegistry from "./ThemeRegistry";
+import { ThemeContextProvider } from "./ThemeContext";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -28,9 +29,11 @@ export default function RootLayout({
       <body>
         <StoreProvider>
           <AppRouterCacheProvider>
-            <ThemeRegistry>
-              <main>{children}</main>
-            </ThemeRegistry>
+            <ThemeContextProvider>
+              <ThemeRegistry>
+                <main>{children}</main>
+              </ThemeRegistry>
+            </ThemeContextProvider>
           </AppRouterCacheProvider>
         </StoreProvider>
       </body>
