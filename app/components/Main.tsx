@@ -232,6 +232,10 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
       setBoardId(selectedBoard.id);
       setSelectedBoardTitle(selectedBoard.title);
       setSelectedBoardLists(selectedBoard.lists || []);
+    } else {
+      setBoardId("");
+      setSelectedBoardTitle("");
+      setSelectedBoardLists([]);
     }
   }, [selectedBoard]);
 
@@ -398,7 +402,7 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                           sx={{ cursor: "pointer" }}
                           onClick={() => handleTaskClick(task)}
                         >
-                          <Typography sx={{ fontWeight: 600 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
                             {task.title}
                           </Typography>
                           {task.subtasks && task.subtasks.length > 0 && (

@@ -24,12 +24,15 @@ export default function Home() {
   console.log(boards);
 
   const {
-    data: selectedBoard,
+    data: fetchedBoard,
     isLoading: selectedBoardisLoading,
     isError: selectedBoardIsError,
   } = useGetBoardByIdQuery(selectedBoardId || "", {
     skip: !selectedBoardId,
   });
+
+  // Only use the fetched board if we still have a selectedBoardId
+  const selectedBoard = selectedBoardId ? fetchedBoard : undefined;
 
   const handleBoardSelection = (boardId: string) => {
     setSelectedBoardId(boardId);
