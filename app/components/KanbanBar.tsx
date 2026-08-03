@@ -10,7 +10,6 @@ import AddTaskModal from "./AddTaskModal";
 
 import Typography from "@mui/material/Typography";
 import Menu from "@mui/material/Menu";
-import MenuIcon from "@mui/icons-material/Menu";
 import Container from "@mui/material/Container";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
@@ -36,7 +35,9 @@ const KanbanBar: FC<KanbanBarProps> = ({
 }) => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-  const [anchorElAvatar, setAnchorElAvatar] = useState<null | HTMLElement>(null);
+  const [anchorElAvatar, setAnchorElAvatar] = useState<null | HTMLElement>(
+    null,
+  );
   const [openModal, setOpenModal] = useState(false);
   const [newTaskName, setNewTaskName] = useState<string>("");
   const [listId, setListId] = useState<string | undefined>("");
@@ -47,16 +48,16 @@ const KanbanBar: FC<KanbanBarProps> = ({
   const dispatch = useAppDispatch();
   const { data: session } = useSession();
 
-  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElNav(event.currentTarget);
-  };
+  // const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
+  //   setAnchorElNav(event.currentTarget);
+  // };
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
   };
 
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
-  };
+  // const handleCloseNavMenu = () => {
+  //   setAnchorElNav(null);
+  // };
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
@@ -337,7 +338,9 @@ const KanbanBar: FC<KanbanBarProps> = ({
               </Menu>
 
               {/* User avatar with logout */}
-              <Tooltip title={session?.user?.name || session?.user?.email || "Account"}>
+              <Tooltip
+                title={session?.user?.name || session?.user?.email || "Account"}
+              >
                 <IconButton onClick={handleOpenAvatarMenu} sx={{ p: 0.5 }}>
                   <Avatar
                     sx={{
