@@ -1,9 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthUserId } from "@/lib/auth-utils";
 
 // POST /api/tasks — create a new task
 export async function POST(request: NextRequest) {
   try {
+    const userIdOrResponse = await getAuthUserId();
+    if (userIdOrResponse instanceof NextResponse) return userIdOrResponse;
+
     const body = await request.json();
     const task = await prisma.task.create({
       data: {

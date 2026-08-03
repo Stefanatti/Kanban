@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthUserId } from "@/lib/auth-utils";
 
 // GET /api/tasks/[id]
 export async function GET(
@@ -7,6 +8,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const userIdOrResponse = await getAuthUserId();
+    if (userIdOrResponse instanceof NextResponse) return userIdOrResponse;
+
     const { id } = await params;
     const task = await prisma.task.findUnique({
       where: { id },
@@ -32,6 +36,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const userIdOrResponse = await getAuthUserId();
+    if (userIdOrResponse instanceof NextResponse) return userIdOrResponse;
+
     const { id } = await params;
     const body = await request.json();
 
@@ -81,6 +88,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const userIdOrResponse = await getAuthUserId();
+    if (userIdOrResponse instanceof NextResponse) return userIdOrResponse;
+
     const { id } = await params;
     await prisma.task.delete({ where: { id } });
     return NextResponse.json({ message: "Task deleted" });

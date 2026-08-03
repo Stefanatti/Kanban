@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthUserId } from "@/lib/auth-utils";
 
 // PATCH /api/subtasks/[id] — toggle isCompleted
 export async function PATCH(
@@ -7,6 +8,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const userIdOrResponse = await getAuthUserId();
+    if (userIdOrResponse instanceof NextResponse) return userIdOrResponse;
+
     const { id } = await params;
     const body = await request.json();
 

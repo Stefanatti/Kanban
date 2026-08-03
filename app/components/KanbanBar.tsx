@@ -14,11 +14,13 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Container from "@mui/material/Container";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
+import Avatar from "@mui/material/Avatar";
 import AdbIcon from "@mui/icons-material/Adb";
 import MoreIcon from "@mui/icons-material/MoreVert";
 import { useCreateTaskMutation } from "@/lib/features/tasksSlice";
 import { boardsApi } from "@/lib/features/boardSlice";
 import { useAppDispatch } from "@/lib/hooks";
+import { useSession, signOut } from "next-auth/react";
 import { Board, Task } from "@/app/interfaces/interfaces";
 
 interface KanbanBarProps {
@@ -34,6 +36,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
 }) => {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+  const [anchorElAvatar, setAnchorElAvatar] = useState<null | HTMLElement>(null);
   const [openModal, setOpenModal] = useState(false);
   const [newTaskName, setNewTaskName] = useState<string>("");
   const [listId, setListId] = useState<string | undefined>("");
@@ -42,6 +45,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
   >([]);
   const [createTask] = useCreateTaskMutation();
   const dispatch = useAppDispatch();
+  const { data: session } = useSession();
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -56,6 +60,14 @@ const KanbanBar: FC<KanbanBarProps> = ({
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
+  };
+
+  const handleOpenAvatarMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElAvatar(event.currentTarget);
+  };
+
+  const handleCloseAvatarMenu = () => {
+    setAnchorElAvatar(null);
   };
 
   const handleOpenModal = () => setOpenModal(true);
@@ -266,23 +278,28 @@ const KanbanBar: FC<KanbanBarProps> = ({
 
             {/* THREE DOTS!! */}
 
-            <Box sx={{ flexGrow: 0 }}>
-              <Tooltip title="Open settings">
+            <Box
+              sx={{
+                flexGrow: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+              }}
+            >
+              {/* Board settings (3 dots) */}
+              <Tooltip title="Board settings">
                 <IconButton
                   size="large"
-                  aria-label="display more actions"
-                  edge="end"
+                  aria-label="board settings"
                   color="inherit"
                   onClick={handleOpenUserMenu}
-
-                  // sx={{ p: 3 }}
                 >
                   <MoreIcon />
                 </IconButton>
               </Tooltip>
               <Menu
-                sx={{ mt: "45px", pr: 0 }}
-                id="menu-appbar"
+                sx={{ mt: "45px" }}
+                id="board-menu"
                 anchorEl={anchorElUser}
                 disablePortal
                 anchorOrigin={{
@@ -316,6 +333,51 @@ const KanbanBar: FC<KanbanBarProps> = ({
                   sx={{ color: "error.main" }}
                 >
                   <Typography textAlign="center">Delete Board</Typography>
+                </MenuItem>
+              </Menu>
+
+              {/* User avatar with logout */}
+              <Tooltip title={session?.user?.name || session?.user?.email || "Account"}>
+                <IconButton onClick={handleOpenAvatarMenu} sx={{ p: 0.5 }}>
+                  <Avatar
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      bgcolor: "primary.main",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    {session?.user?.name
+                      ? session.user.name.charAt(0).toUpperCase()
+                      : session?.user?.email?.charAt(0).toUpperCase() || "U"}
+                  </Avatar>
+                </IconButton>
+              </Tooltip>
+              <Menu
+                sx={{ mt: "45px" }}
+                id="avatar-menu"
+                anchorEl={anchorElAvatar}
+                disablePortal
+                anchorOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                keepMounted
+                disableScrollLock={true}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                open={Boolean(anchorElAvatar)}
+                onClose={handleCloseAvatarMenu}
+              >
+                <MenuItem
+                  onClick={() => {
+                    handleCloseAvatarMenu();
+                    signOut({ callbackUrl: "/login" });
+                  }}
+                >
+                  <Typography textAlign="center">Log Out</Typography>
                 </MenuItem>
               </Menu>
             </Box>

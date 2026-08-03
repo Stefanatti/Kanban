@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthUserId } from "@/lib/auth-utils";
 
 // GET /api/lists/[id]
 export async function GET(
@@ -7,6 +8,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const userIdOrResponse = await getAuthUserId();
+    if (userIdOrResponse instanceof NextResponse) return userIdOrResponse;
+
     const { id } = await params;
     const list = await prisma.list.findUnique({
       where: { id },
@@ -32,6 +36,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const userIdOrResponse = await getAuthUserId();
+    if (userIdOrResponse instanceof NextResponse) return userIdOrResponse;
+
     const { id } = await params;
     const body = await request.json();
     const list = await prisma.list.update({
@@ -56,6 +63,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const userIdOrResponse = await getAuthUserId();
+    if (userIdOrResponse instanceof NextResponse) return userIdOrResponse;
+
     const { id } = await params;
     await prisma.list.delete({ where: { id } });
     return NextResponse.json({ message: "List deleted" });
