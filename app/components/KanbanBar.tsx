@@ -138,7 +138,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
         position="static"
         sx={{ backgroundColor: "background.paper", color: "text.primary" }}
       >
-        <Container maxWidth="xl">
+        <Container maxWidth={false} disableGutters sx={{ px: 2 }}>
           <Toolbar disableGutters>
             <AdbIcon sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
             <Typography

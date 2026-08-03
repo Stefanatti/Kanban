@@ -303,7 +303,7 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
   };
 
   return (
-    <Container maxWidth="xl">
+    <Box sx={{ px: 2, width: "100%" }}>
       {!selectedBoard ? (
         <Box
           sx={{
@@ -346,7 +346,7 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                       display: "flex",
                       flexDirection: "column",
                       gap: "10px",
-                      minWidth: "330px",
+                      maxWidth: "400px",
                     }}
                   >
                     <Box
@@ -441,7 +441,7 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                   <Box sx={{ height: "24px" }} />
                   <Box
                     sx={{
-                      minWidth: "330px",
+                      maxWidth: "330px",
                       height: "95%",
                       backgroundColor: (theme) =>
                         theme.palette.mode === "dark" ? "#3E3F4E" : "#E4EBFA",
@@ -549,7 +549,7 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
           />
         </div>
       )}
-    </Container>
+    </Box>
   );
 };
 
