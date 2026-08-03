@@ -74,9 +74,16 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
     >
       <List>
         <ListItem>
-          <Typography>All Boards ({boards?.length ?? 0})</Typography>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+            }}
+          >
+            All Boards ({boards?.length ?? 0})
+          </Typography>
         </ListItem>
-        <Divider />
+        <Divider sx={{ mt: 2, mb: 2 }} />
 
         {boards?.map((board) => (
           <ListItem key={board.id} disablePadding sx={{ mb: 0.5, mt: 2 }}>

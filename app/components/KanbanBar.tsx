@@ -17,6 +17,8 @@ import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
 import MoreIcon from "@mui/icons-material/MoreVert";
 import { useCreateTaskMutation } from "@/lib/features/tasksSlice";
+import { boardsApi } from "@/lib/features/boardSlice";
+import { useAppDispatch } from "@/lib/hooks";
 import { Board, Task } from "@/app/interfaces/interfaces";
 
 interface KanbanBarProps {
@@ -39,6 +41,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
     Array<Task | undefined>
   >([]);
   const [createTask] = useCreateTaskMutation();
+  const dispatch = useAppDispatch();
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -87,6 +90,8 @@ const KanbanBar: FC<KanbanBarProps> = ({
       const newTask = { title: taskName, listId, description, subtasks };
       const createdTask = await createTask(newTask).unwrap();
       setSelectedBoardTasks((prevTasks) => [...prevTasks, createdTask]);
+      // Invalidate board data so Main re-renders with the new task
+      dispatch(boardsApi.util.invalidateTags(["Board"]));
     } catch (err) {
       console.error("Failed to create task:", err);
     }
@@ -171,7 +176,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
                 textDecoration: "none",
               }}
             >
-              Board's Title
+              {selectedBoard?.title}
             </Typography>
             <Typography
               variant="h5"
