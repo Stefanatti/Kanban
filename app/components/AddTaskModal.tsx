@@ -39,6 +39,9 @@ const style = {
   borderRadius: "10px",
   boxShadow: 24,
   p: 4,
+  display: "flex",
+  flexDirection: "column",
+  gap: 3,
 };
 
 function AddTaskModal({
@@ -167,7 +170,7 @@ function AddTaskModal({
           autoComplete="off"
         >
           <Box>
-            <Typography variant="h6" component="h2">
+            <Typography variant="h6" component="h2" mb={2}>
               Title
             </Typography>
             <TextField
@@ -184,7 +187,7 @@ function AddTaskModal({
           </Box>
 
           <Box>
-            <Typography variant="h6" component="h2">
+            <Typography variant="h6" component="h2" mb={2}>
               Description
             </Typography>
             <TextField
@@ -286,7 +289,7 @@ function AddTaskModal({
           </Box>
 
           <Box>
-            <Typography variant="h6" component="h2">
+            <Typography variant="h6" component="h2" mb={2}>
               Status
             </Typography>
             <TextField

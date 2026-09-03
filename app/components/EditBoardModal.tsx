@@ -39,6 +39,9 @@ const style = {
   borderRadius: "10px",
   boxShadow: 24,
   p: 4,
+  display: "flex",
+  flexDirection: "column",
+  gap: 3,
 } as const;
 
 function EditBoardModal({
