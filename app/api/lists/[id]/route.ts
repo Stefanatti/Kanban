@@ -14,7 +14,9 @@ export async function GET(
     const { id } = await params;
     const list = await prisma.list.findUnique({
       where: { id },
-      include: { tasks: true },
+      include: {
+        tasks: { include: { subtasks: true, reminders: true } },
+      },
     });
 
     if (!list) {
@@ -46,7 +48,9 @@ export async function PATCH(
       data: {
         ...(body.title && { title: body.title }),
       },
-      include: { tasks: true },
+      include: {
+        tasks: { include: { subtasks: true, reminders: true } },
+      },
     });
     return NextResponse.json(list);
   } catch {

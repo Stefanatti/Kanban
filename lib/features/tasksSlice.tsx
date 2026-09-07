@@ -1,11 +1,14 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { Task } from "@/app/interfaces/interfaces";
+import { Task, TaskUpdateInput } from "@/app/interfaces/interfaces";
 
 interface CreateTaskInput {
   title: string;
   listId: string;
   description?: string;
   subtasks?: { title: string }[];
+  dueDate?: string | null;
+  reminderMinutesBefore?: number | null;
+  timezone?: string;
 }
 
 export const tasksApi = createApi({
@@ -27,7 +30,10 @@ export const tasksApi = createApi({
       query: (id) => ({ url: `tasks/${id}`, method: "GET" }),
       providesTags: ["Task"],
     }),
-    updateTask: builder.mutation<void, { id: string; changes: Partial<Task> }>({
+    updateTask: builder.mutation<
+      Task,
+      { id: string; changes: TaskUpdateInput }
+    >({
       query: ({ id, changes }) => ({
         url: `tasks/${id}`,
         method: "PATCH",

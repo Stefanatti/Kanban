@@ -1,14 +1,8 @@
 "use client";
 import * as React from "react";
 import { useState, useEffect, FC } from "react";
-import Container from "@mui/material/Container";
 import { Box, Button, Typography, Stack, Paper, styled } from "@mui/material";
-import Grid from "@mui/material/Grid2";
-import {
-  useGetBoardsQuery,
-  useUpdateBoardMutation,
-} from "@/lib/features/boardSlice";
-import { useGetTaskByIdQuery } from "@/lib/features/tasksSlice";
+import { useUpdateBoardMutation } from "@/lib/features/boardSlice";
 import EditBoardModal from "./EditBoardModal";
 import {
   useCreateListMutation,
@@ -22,20 +16,12 @@ import {
 import AddTaskModal from "./AddTaskModal";
 import ViewTaskModal from "./ViewTaskModal";
 import DeleteTaskModal from "./DeleteTaskModal";
-import { Board, Task, List } from "@/app/interfaces/interfaces";
-
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: "grey",
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  minHeight: "80vh",
-  // width: "300px",
-  textAlign: "center",
-  color: theme.palette.text.secondary,
-  ...theme.applyStyles("dark", {
-    backgroundColor: "#1A2027",
-  }),
-}));
+import {
+  Board,
+  Task,
+  List,
+  TaskUpdateInput,
+} from "@/app/interfaces/interfaces";
 
 const TaskItem = styled(Paper)(({ theme }) => ({
   backgroundColor: "#fff",
@@ -54,9 +40,7 @@ interface MainProps {
 }
 
 const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
-  const [open, setOpen] = useState<boolean>(false);
   const [openModal, setOpenModal] = useState<boolean>(false);
-  const { data: boards, isLoading, isError } = useGetBoardsQuery();
   const [selectedBoardTitle, setSelectedBoardTitle] = useState<
     string | undefined
   >("");
@@ -203,9 +187,9 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
     }
   };
 
-  const handleUpdateTask = async (taskId: string, changes: Partial<Task>) => {
+  const handleUpdateTask = async (taskId: string, changes: TaskUpdateInput) => {
     try {
-      await updateTask({ id: taskId, changes }).unwrap();
+      const updatedTask = await updateTask({ id: taskId, changes }).unwrap();
       // Update local state to reflect changes
       setSelectedBoardLists((prevLists) =>
         prevLists.map((list) => {
@@ -213,20 +197,17 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
           return {
             ...list,
             tasks: list.tasks?.map((task) =>
-              task.id === taskId ? { ...task, ...changes } : task,
+              task.id === taskId ? updatedTask : task,
             ),
           };
         }),
       );
+      setSelectedTask(updatedTask);
     } catch (err) {
       console.error("Failed to update task:", err);
       throw err;
     }
   };
-  const toggleDrawer = (newOpen: boolean) => () => {
-    setOpen(newOpen ?? !open);
-  };
-
   useEffect(() => {
     if (selectedBoard) {
       setBoardId(selectedBoard.id);

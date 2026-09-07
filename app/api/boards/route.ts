@@ -15,7 +15,12 @@ export async function GET() {
         lists: {
           include: {
             tasks: {
-              include: { subtasks: true },
+              include: {
+                subtasks: true,
+                reminders: {
+                  where: { sentAt: null, cancelledAt: null },
+                },
+              },
             },
           },
         },
@@ -23,7 +28,7 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(boards);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch boards" },
       { status: 500 },
@@ -53,14 +58,19 @@ export async function POST(request: NextRequest) {
         lists: {
           include: {
             tasks: {
-              include: { subtasks: true },
+              include: {
+                subtasks: true,
+                reminders: {
+                  where: { sentAt: null, cancelledAt: null },
+                },
+              },
             },
           },
         },
       },
     });
     return NextResponse.json(board, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to create board" },
       { status: 500 },

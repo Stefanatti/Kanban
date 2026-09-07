@@ -3,9 +3,14 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
-import { MenuItem, TextField } from "@mui/material";
+import { Checkbox, FormControlLabel, MenuItem, TextField } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
-import { Board, Task, Subtask } from "@/app/interfaces/interfaces";
+import {
+  Board,
+  Task,
+  Subtask,
+  TaskUpdateInput,
+} from "@/app/interfaces/interfaces";
 
 interface ModalProps {
   open: boolean;
@@ -20,15 +25,33 @@ interface ModalProps {
     listId?: string,
     description?: string,
     subtasks?: { title: string }[],
+    dueDate?: string | null,
+    reminderMinutesBefore?: number | null,
+    timezone?: string,
   ) => Promise<void>;
   // Edit mode props
   editTask?: Task;
-  onUpdateTask?: (taskId: string, changes: Partial<Task>) => Promise<void>;
+  onUpdateTask?: (taskId: string, changes: TaskUpdateInput) => Promise<void>;
 }
 const statuses = ["To Do", "Doing", "Done"];
+const reminderOptions = [
+  { value: 0, label: "At due time" },
+  { value: 10, label: "10 minutes before" },
+  { value: 60, label: "1 hour before" },
+  { value: 1440, label: "1 day before" },
+];
+
+function toLocalDateTimeInput(value?: string | Date | null): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 16);
+}
 
 const style = {
-  position: "absolute" as "absolute",
+  position: "absolute" as const,
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
@@ -62,6 +85,14 @@ function AddTaskModal({
   const [newSubtask, setNewSubtask] = useState<string>("");
   const [addingSubtask, setAddingSubtask] = useState<boolean>(false);
   const [taskTitle, setTaskTitle] = useState<string>("");
+  const [dueDate, setDueDate] = useState<string>("");
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderMinutesBefore, setReminderMinutesBefore] = useState(10);
+  const [timezone, setTimezone] = useState("Local time");
+
+  useEffect(() => {
+    setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  }, []);
 
   // Pre-fill fields when editing
   useEffect(() => {
@@ -74,11 +105,35 @@ function AddTaskModal({
         list.tasks?.some((t) => t.id === editTask.id),
       );
       setSelectedColumnStatus(taskList?.title || "");
+      const localDueDate = toLocalDateTimeInput(editTask.dueDate);
+      const activeReminder = editTask.reminders?.find(
+        (reminder) => !reminder.sentAt && !reminder.cancelledAt,
+      );
+
+      setDueDate(localDueDate);
+      setReminderEnabled(Boolean(activeReminder && localDueDate));
+
+      if (activeReminder && editTask.dueDate) {
+        const minutesBefore = Math.round(
+          (new Date(editTask.dueDate).getTime() -
+            new Date(activeReminder.remindAt).getTime()) /
+            60000,
+        );
+        const supportedOffset = reminderOptions.some(
+          (option) => option.value === minutesBefore,
+        );
+        setReminderMinutesBefore(supportedOffset ? minutesBefore : 10);
+      } else {
+        setReminderMinutesBefore(10);
+      }
     } else {
       setTaskTitle("");
       setDescription("");
       setSubtasks([]);
       setSelectedColumnStatus("");
+      setDueDate("");
+      setReminderEnabled(false);
+      setReminderMinutesBefore(10);
     }
   }, [editTask, selectedBoard]);
 
@@ -110,6 +165,14 @@ function AddTaskModal({
       return;
     }
 
+    if (reminderEnabled && !dueDate) {
+      alert("Please choose a due date and time for the reminder.");
+      return;
+    }
+
+    const dueDateUtc = dueDate ? new Date(dueDate).toISOString() : null;
+    const reminderOffset = reminderEnabled ? reminderMinutesBefore : null;
+
     const targetList = selectedBoard?.lists?.find(
       (list) => list.title === selectedColumnStatus,
     );
@@ -125,6 +188,9 @@ function AddTaskModal({
           description,
           subtasks,
           listId: targetList.id,
+          dueDate: dueDateUtc,
+          reminderMinutesBefore: reminderOffset,
+          timezone,
         });
       } else {
         await addTask(
@@ -132,6 +198,9 @@ function AddTaskModal({
           targetList.id,
           description,
           subtasks.map((s) => ({ title: s.title })),
+          dueDateUtc,
+          reminderOffset,
+          timezone,
         );
         if (setNewTaskName) setNewTaskName("");
       }
@@ -139,6 +208,9 @@ function AddTaskModal({
       setSelectedColumnStatus("");
       setDescription("");
       setSubtasks([]);
+      setDueDate("");
+      setReminderEnabled(false);
+      setReminderMinutesBefore(10);
       handleClose();
     } catch (error) {
       console.error("Failed to save task:", error);
@@ -198,6 +270,57 @@ function AddTaskModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. It's always good to take a break..."
             />
+          </Box>
+
+          <Box>
+            <Typography variant="h6" component="h2" mb={2}>
+              Due date
+            </Typography>
+            <TextField
+              label="Due date and time"
+              type="datetime-local"
+              value={dueDate}
+              onChange={(event) => {
+                const nextDueDate = event.target.value;
+                setDueDate(nextDueDate);
+                if (!nextDueDate) setReminderEnabled(false);
+              }}
+              slotProps={{ inputLabel: { shrink: true } }}
+              helperText={`Times are shown in ${timezone}`}
+              fullWidth
+            />
+          </Box>
+
+          <Box>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={reminderEnabled}
+                  disabled={!dueDate}
+                  onChange={(event) => setReminderEnabled(event.target.checked)}
+                />
+              }
+              label="Remind me"
+              sx={{ mb: reminderEnabled ? 1 : 0 }}
+            />
+
+            {reminderEnabled && (
+              <TextField
+                select
+                label="Reminder"
+                value={reminderMinutesBefore}
+                onChange={(event) =>
+                  setReminderMinutesBefore(Number(event.target.value))
+                }
+                fullWidth
+              >
+                {reminderOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
           </Box>
 
           <Box>

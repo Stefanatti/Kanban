@@ -15,17 +15,18 @@ datasource db {
 // ─── NextAuth Models ────────────────────────────────────────────
 
 model User {
-  id            String    @id @default(uuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  password      String?   // hashed password for credentials login
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  boards        Board[]   // each user owns their own boards
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                String             @id @default(uuid())
+  name              String?
+  email             String             @unique
+  emailVerified     DateTime?
+  password          String? // hashed password for credentials login
+  image             String?
+  accounts          Account[]
+  sessions          Session[]
+  boards            Board[] // each user owns their own boards
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  pushSubscriptions PushSubscription[]
 }
 
 model Account {
@@ -85,16 +86,17 @@ model List {
 }
 
 model Task {
-  id          String    @id @default(uuid())
+  id          String         @id @default(uuid())
   title       String
   description String?
   dueDate     DateTime?
-  completed   Boolean   @default(false)
+  completed   Boolean        @default(false)
   subtasks    Subtask[]
-  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
+  list        List           @relation(fields: [listId], references: [id], onDelete: Cascade)
   listId      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  reminders   TaskReminder[]
 }
 
 model Subtask {
@@ -105,4 +107,28 @@ model Subtask {
   taskId      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model TaskReminder {
+  id          String    @id @default(uuid())
+  taskId      String
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  remindAt    DateTime
+  sentAt      DateTime?
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([remindAt, sentAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

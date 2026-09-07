@@ -19,7 +19,9 @@ export async function GET(request: NextRequest) {
 
     const lists = await prisma.list.findMany({
       where: { boardId },
-      include: { tasks: true },
+      include: {
+        tasks: { include: { subtasks: true, reminders: true } },
+      },
       orderBy: { createdAt: "asc" },
     });
 
@@ -44,7 +46,9 @@ export async function POST(request: NextRequest) {
         title: body.title,
         boardId: body.boardId,
       },
-      include: { tasks: true },
+      include: {
+        tasks: { include: { subtasks: true, reminders: true } },
+      },
     });
     return NextResponse.json(list, { status: 201 });
   } catch {

@@ -14,7 +14,7 @@ export async function GET(
     const { id } = await params;
     const task = await prisma.task.findUnique({
       where: { id },
-      include: { subtasks: true },
+      include: { subtasks: true, reminders: true },
     });
 
     if (!task) {
@@ -41,6 +41,44 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
+    const currentTask = await prisma.task.findUnique({
+      where: { id },
+      select: { dueDate: true },
+    });
+
+    if (!currentTask) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    }
+
+    const dueDate =
+      body.dueDate !== undefined
+        ? body.dueDate
+          ? new Date(body.dueDate)
+          : null
+        : currentTask.dueDate;
+    const reminderMinutesBefore = body.reminderMinutesBefore;
+
+    if (dueDate && Number.isNaN(dueDate.getTime())) {
+      return NextResponse.json({ error: "Invalid due date" }, { status: 400 });
+    }
+
+    if (
+      reminderMinutesBefore !== null &&
+      reminderMinutesBefore !== undefined &&
+      (!dueDate ||
+        !Number.isInteger(reminderMinutesBefore) ||
+        reminderMinutesBefore < 0)
+    ) {
+      return NextResponse.json(
+        { error: "A valid due date and reminder offset are required" },
+        { status: 400 },
+      );
+    }
+
+    const remindAt =
+      dueDate && reminderMinutesBefore !== null && reminderMinutesBefore !== undefined
+        ? new Date(dueDate.getTime() - reminderMinutesBefore * 60000)
+        : null;
 
     // Handle subtasks: delete existing and recreate
     if (body.subtasks !== undefined) {
@@ -66,12 +104,18 @@ export async function PATCH(
           description: body.description,
         }),
         ...(body.dueDate !== undefined && {
-          dueDate: body.dueDate ? new Date(body.dueDate) : null,
+          dueDate,
         }),
         ...(body.completed !== undefined && { completed: body.completed }),
         ...(body.listId !== undefined && { listId: body.listId }),
+        ...(body.reminderMinutesBefore !== undefined && {
+          reminders: {
+            deleteMany: { sentAt: null },
+            ...(remindAt && { create: { remindAt } }),
+          },
+        }),
       },
-      include: { subtasks: true },
+      include: { subtasks: true, reminders: true },
     });
     return NextResponse.json(task);
   } catch {

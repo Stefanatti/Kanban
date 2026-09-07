@@ -28,8 +28,7 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
   const [open, setOpen] = useState<boolean>(false);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [boardName, setBoardName] = useState<string>("");
-  const [createBoard, { isLoading, isError, isSuccess }] =
-    useCreateBoardMutation();
+  const [createBoard] = useCreateBoardMutation();
   const { mode, toggleTheme } = useThemeMode();
 
   const handleCreateBoard = async (

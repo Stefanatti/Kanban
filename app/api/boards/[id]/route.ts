@@ -19,7 +19,12 @@ export async function GET(
         lists: {
           include: {
             tasks: {
-              include: { subtasks: true },
+              include: {
+                subtasks: true,
+                reminders: {
+                  where: { sentAt: null, cancelledAt: null },
+                },
+              },
             },
           },
         },
@@ -67,7 +72,12 @@ export async function PUT(
         lists: {
           include: {
             tasks: {
-              include: { subtasks: true },
+              include: {
+                subtasks: true,
+                reminders: {
+                  where: { sentAt: null, cancelledAt: null },
+                },
+              },
             },
           },
         },

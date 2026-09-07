@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
-import { useState, FC, useEffect } from "react";
+import { useState, FC } from "react";
 import AddTaskModal from "./AddTaskModal";
 
 import Typography from "@mui/material/Typography";
@@ -20,7 +20,7 @@ import { useCreateTaskMutation } from "@/lib/features/tasksSlice";
 import { boardsApi } from "@/lib/features/boardSlice";
 import { useAppDispatch } from "@/lib/hooks";
 import { useSession, signOut } from "next-auth/react";
-import { Board, Task } from "@/app/interfaces/interfaces";
+import { Board } from "@/app/interfaces/interfaces";
 
 interface KanbanBarProps {
   selectedBoard: Board | undefined;
@@ -33,7 +33,6 @@ const KanbanBar: FC<KanbanBarProps> = ({
   onEditBoard,
   onDeleteBoard,
 }) => {
-  const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [anchorElAvatar, setAnchorElAvatar] = useState<null | HTMLElement>(
     null,
@@ -41,9 +40,6 @@ const KanbanBar: FC<KanbanBarProps> = ({
   const [openModal, setOpenModal] = useState(false);
   const [newTaskName, setNewTaskName] = useState<string>("");
   const [listId, setListId] = useState<string | undefined>("");
-  const [selectedBoardTasks, setSelectedBoardTasks] = useState<
-    Array<Task | undefined>
-  >([]);
   const [createTask] = useCreateTaskMutation();
   const dispatch = useAppDispatch();
   const { data: session } = useSession();
@@ -81,28 +77,28 @@ const KanbanBar: FC<KanbanBarProps> = ({
     handleOpenModal();
   };
 
-  console.log(selectedBoard);
-
-  useEffect(() => {
-    if (selectedBoard) {
-      setSelectedBoardTasks(
-        selectedBoard.lists?.flatMap((list) => list.tasks || []) || [],
-      );
-    }
-  }, [selectedBoard]);
-
   const handleCreateTask = async (
     taskName: string,
     listId?: string,
     description?: string,
     subtasks?: { title: string }[],
+    dueDate?: string | null,
+    reminderMinutesBefore?: number | null,
+    timezone?: string,
   ): Promise<void> => {
     if (!taskName || !listId) return;
 
     try {
-      const newTask = { title: taskName, listId, description, subtasks };
-      const createdTask = await createTask(newTask).unwrap();
-      setSelectedBoardTasks((prevTasks) => [...prevTasks, createdTask]);
+      const newTask = {
+        title: taskName,
+        listId,
+        description,
+        subtasks,
+        dueDate,
+        reminderMinutesBefore,
+        timezone,
+      };
+      await createTask(newTask).unwrap();
       // Invalidate board data so Main re-renders with the new task
       dispatch(boardsApi.util.invalidateTags(["Board"]));
     } catch (err) {

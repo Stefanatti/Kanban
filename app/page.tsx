@@ -10,7 +10,6 @@ import {
   useDeleteBoardMutation,
 } from "@/lib/features/boardSlice";
 import { useState, useRef } from "react";
-import { Board } from "@/app/interfaces/interfaces";
 
 export default function Home() {
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
@@ -20,14 +19,9 @@ export default function Home() {
   // Ref to trigger edit modal from KanbanBar → Main
   const editBoardRef = useRef<() => void>(() => {});
 
-  const { data: boards, isLoading, isError } = useGetBoardsQuery();
-  console.log(boards);
+  const { data: boards } = useGetBoardsQuery();
 
-  const {
-    data: fetchedBoard,
-    isLoading: selectedBoardisLoading,
-    isError: selectedBoardIsError,
-  } = useGetBoardByIdQuery(selectedBoardId || "", {
+  const { data: fetchedBoard } = useGetBoardByIdQuery(selectedBoardId || "", {
     skip: !selectedBoardId,
   });
 

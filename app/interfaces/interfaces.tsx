@@ -4,15 +4,30 @@ export interface Subtask {
   isCompleted: boolean;
 }
 
+export interface TaskReminder {
+  id: string;
+  remindAt: string | Date;
+  sentAt?: string | Date | null;
+  cancelledAt?: string | Date | null;
+}
+
+export interface ReminderSettingsInput {
+  reminderMinutesBefore?: number | null;
+  timezone?: string;
+}
+
 export interface Task {
   title: string;
   description?: string;
-  dueDate?: Date;
+  dueDate?: string | Date | null;
   completed?: boolean;
   subtasks?: Subtask[];
+  reminders?: TaskReminder[];
   id: string;
   listId?: string;
 }
+
+export type TaskUpdateInput = Partial<Task> & ReminderSettingsInput;
 
 export interface List {
   id: string;
