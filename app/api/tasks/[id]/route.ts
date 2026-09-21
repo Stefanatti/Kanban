@@ -13,7 +13,7 @@ export async function GET(
 
     const { id } = await params;
     const task = await prisma.task.findUnique({
-      where: { id },
+      where: { id, list: { board: { userId: userIdOrResponse } } },
       include: { subtasks: true, reminders: true },
     });
 
@@ -41,9 +41,15 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
+    if (body.listId !== undefined && (typeof body.listId !== "string" || !body.listId)) {
+      return NextResponse.json({ error: "Invalid list" }, { status: 400 });
+    }
     const currentTask = await prisma.task.findUnique({
-      where: { id },
-      select: { dueDate: true },
+      where: { id, list: { board: { userId: userIdOrResponse } } },
+      include: {
+        list: true,
+        reminders: { where: { sentAt: null, cancelledAt: null }, orderBy: { createdAt: "desc" } },
+      },
     });
 
     if (!currentTask) {
@@ -56,7 +62,18 @@ export async function PATCH(
           ? new Date(body.dueDate)
           : null
         : currentTask.dueDate;
-    const reminderMinutesBefore = body.reminderMinutesBefore;
+    const targetList = body.listId !== undefined
+      ? await prisma.list.findFirst({ where: { id: body.listId, board: { userId: userIdOrResponse } } })
+      : currentTask.list;
+    if (!targetList) return NextResponse.json({ error: "List not found" }, { status: 404 });
+    const activeReminder = currentTask.reminders[0];
+    const reminderMinutesBefore = body.reminderMinutesBefore !== undefined
+      ? body.reminderMinutesBefore
+      : activeReminder && currentTask.dueDate && dueDate
+        ? Math.max(0, (currentTask.dueDate.getTime() - activeReminder.remindAt.getTime()) / 60000)
+        : null;
+    const isCompleted = (body.completed ?? currentTask.completed) || targetList.title.trim().toLowerCase() === "done";
+    const replaceReminder = body.reminderMinutesBefore !== undefined || body.dueDate !== undefined || isCompleted;
 
     if (dueDate && Number.isNaN(dueDate.getTime())) {
       return NextResponse.json({ error: "Invalid due date" }, { status: 400 });
@@ -76,9 +93,12 @@ export async function PATCH(
     }
 
     const remindAt =
-      dueDate && reminderMinutesBefore !== null && reminderMinutesBefore !== undefined
+      !isCompleted && dueDate && reminderMinutesBefore !== null && reminderMinutesBefore !== undefined
         ? new Date(dueDate.getTime() - reminderMinutesBefore * 60000)
         : null;
+    if (remindAt && Number.isNaN(remindAt.getTime())) {
+      return NextResponse.json({ error: "Invalid reminder time" }, { status: 400 });
+    }
 
     // Handle subtasks: delete existing and recreate
     if (body.subtasks !== undefined) {
@@ -108,7 +128,7 @@ export async function PATCH(
         }),
         ...(body.completed !== undefined && { completed: body.completed }),
         ...(body.listId !== undefined && { listId: body.listId }),
-        ...(body.reminderMinutesBefore !== undefined && {
+        ...(replaceReminder && {
           reminders: {
             deleteMany: { sentAt: null },
             ...(remindAt && { create: { remindAt } }),
@@ -136,7 +156,7 @@ export async function DELETE(
     if (userIdOrResponse instanceof NextResponse) return userIdOrResponse;
 
     const { id } = await params;
-    await prisma.task.delete({ where: { id } });
+    await prisma.task.delete({ where: { id, list: { board: { userId: userIdOrResponse } } } });
     return NextResponse.json({ message: "Task deleted" });
   } catch {
     return NextResponse.json(

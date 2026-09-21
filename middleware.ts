@@ -14,9 +14,11 @@ export const config = {
      * Match all paths EXCEPT:
      * - /login and /signup (auth pages — must be accessible)
      * - /api/auth/* (NextAuth's own API routes)
+     * - /api/reminders (authenticates the scheduler secret in its handler)
+     * - /sw.js (service worker must be available without a login redirect)
      * - /_next/* (Next.js internals: JS bundles, CSS, etc.)
      * - /favicon.ico, /images/* (static assets)
      */
-    "/((?!login|signup|api/auth|_next|favicon.ico|images).*)",
+    "/((?!login|signup|api/auth|api/reminders$|sw\\.js$|_next|favicon.ico|images).*)",
   ],
 };

@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:reminders": "node --test tests/reminders.test.cjs",
+    "reminders:check": "node scripts/check-reminders.cjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
@@ -28,13 +30,15 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
-    "styled-components": "^6.1.13"
+    "styled-components": "^6.1.13",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "eslint": "^8",
     "eslint-config-next": "15.0.4",
     "prisma": "^7.9.0",

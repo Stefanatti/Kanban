@@ -9,6 +9,15 @@ export async function POST(request: NextRequest) {
     if (userIdOrResponse instanceof NextResponse) return userIdOrResponse;
 
     const body = await request.json();
+    if (typeof body.listId !== "string" || !body.listId) {
+      return NextResponse.json({ error: "A list is required" }, { status: 400 });
+    }
+    const list = await prisma.list.findFirst({
+      where: { id: body.listId, board: { userId: userIdOrResponse } },
+    });
+    if (!list) {
+      return NextResponse.json({ error: "List not found" }, { status: 404 });
+    }
     const dueDate = body.dueDate ? new Date(body.dueDate) : null;
     const reminderMinutesBefore = body.reminderMinutesBefore;
 
@@ -29,12 +38,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const remindAt =
+    const remindAt = !body.completed && list.title.trim().toLowerCase() !== "done" &&
       dueDate &&
       reminderMinutesBefore !== null &&
       reminderMinutesBefore !== undefined
         ? new Date(dueDate.getTime() - reminderMinutesBefore * 60000)
         : null;
+    if (remindAt && Number.isNaN(remindAt.getTime())) {
+      return NextResponse.json({ error: "Invalid reminder time" }, { status: 400 });
+    }
 
     const task = await prisma.task.create({
       data: {

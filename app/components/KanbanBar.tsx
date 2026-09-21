@@ -40,9 +40,93 @@ const KanbanBar: FC<KanbanBarProps> = ({
   const [openModal, setOpenModal] = useState(false);
   const [newTaskName, setNewTaskName] = useState<string>("");
   const [listId, setListId] = useState<string | undefined>("");
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [enablingNotifications, setEnablingNotifications] = useState(false);
   const [createTask] = useCreateTaskMutation();
   const dispatch = useAppDispatch();
   const { data: session } = useSession();
+
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    const rawData = window.atob(base64);
+    const output = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      output[i] = rawData.charCodeAt(i);
+    }
+
+    return output;
+  };
+
+  const handleEnableNotifications = async () => {
+    if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+      alert("Push notifications are not supported by this browser.");
+      return;
+    }
+
+    setEnablingNotifications(true);
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        alert("Notification permission was not granted.");
+        return;
+      }
+
+      await navigator.serviceWorker.register("/sw.js");
+      const registration = await navigator.serviceWorker.ready;
+      const publicKey = process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY;
+      if (!publicKey) {
+        throw new Error("Missing public VAPID key.");
+      }
+
+      const existingSubscription =
+        await registration.pushManager.getSubscription();
+      const subscription =
+        existingSubscription ??
+        (await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        }));
+
+      const response = await fetch("/api/push-subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subscription: subscription.toJSON(),
+          userAgent: navigator.userAgent,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to save push subscription");
+      setNotificationsEnabled(true);
+    } catch (error) {
+      console.error("Failed to enable push notifications:", error);
+      alert("Failed to enable reminders on this device.");
+    } finally {
+      setEnablingNotifications(false);
+    }
+  };
+
+  React.useEffect(() => {
+    setNotificationsEnabled(false);
+    if (!session?.user?.id || !("Notification" in window) ||
+        !("serviceWorker" in navigator) || Notification.permission !== "granted") return;
+    let cancelled = false;
+    void (async () => {
+      const registration = await navigator.serviceWorker.getRegistration("/");
+      const subscription = await registration?.pushManager.getSubscription();
+      if (!subscription) return;
+      const response = await fetch("/api/push-subscriptions");
+      if (!response.ok) return;
+      const { endpoints } = await response.json();
+      if (!cancelled) setNotificationsEnabled(endpoints.includes(subscription.endpoint));
+    })().catch(() => { /* Keep the enable button available for retry. */ });
+    return () => { cancelled = true; };
+  }, [session?.user?.id]);
 
   // const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
   //   setAnchorElNav(event.currentTarget);
@@ -370,6 +454,19 @@ const KanbanBar: FC<KanbanBarProps> = ({
                 open={Boolean(anchorElAvatar)}
                 onClose={handleCloseAvatarMenu}
               >
+                <MenuItem
+                  onClick={() => {
+                    handleCloseAvatarMenu();
+                    void handleEnableNotifications();
+                  }}
+                  disabled={notificationsEnabled || enablingNotifications}
+                >
+                  <Typography textAlign="center">
+                    {enablingNotifications ? "Enabling reminders…" : notificationsEnabled
+                      ? "Task reminders enabled"
+                      : "Enable task reminders"}
+                  </Typography>
+                </MenuItem>
                 <MenuItem
                   onClick={() => {
                     handleCloseAvatarMenu();
