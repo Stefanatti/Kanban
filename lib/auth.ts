@@ -5,15 +5,6 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { authConfig } from "./auth.config";
 
-/**
- * Full NextAuth configuration — Node.js runtime only.
- *
- * Extends the shared authConfig with:
- * - PrismaAdapter (needs pg → Node.js)
- * - Credentials provider (needs bcrypt → Node.js)
- *
- * This file must NOT be imported from middleware.ts (Edge runtime).
- */
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
