@@ -2,13 +2,33 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUserId } from "@/lib/auth-utils";
 
+function subscriptionError(error: unknown) {
+  const code = (error as { code?: string } | null)?.code;
+  // Do not log the subscription keys, endpoint, or database connection string.
+  console.error("Push subscription storage failed", { code: code ?? "UNKNOWN" });
+  if (code === "P2021" || code === "P2022") {
+    return NextResponse.json({
+      error: "Reminder storage is not ready. The production database migrations need to be applied.",
+      code: "REMINDER_STORAGE_NOT_READY",
+    }, { status: 503 });
+  }
+  return NextResponse.json({
+    error: "Could not save or check this device for reminders. Please try again later.",
+    code: "SUBSCRIPTION_STORAGE_FAILED",
+  }, { status: 500 });
+}
+
 export async function GET() {
+  try {
   const userId = await getAuthUserId();
   if (userId instanceof NextResponse) return userId;
   const subscriptions = await prisma.pushSubscription.findMany({
     where: { userId }, select: { endpoint: true },
   });
   return NextResponse.json({ endpoints: subscriptions.map((item) => item.endpoint) });
+  } catch (error) {
+    return subscriptionError(error);
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -62,10 +82,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ ok: true, id: created.id });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to save push subscription" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return subscriptionError(error);
   }
 }

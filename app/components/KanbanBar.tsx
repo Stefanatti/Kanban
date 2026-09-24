@@ -76,12 +76,17 @@ const KanbanBar: FC<KanbanBarProps> = ({
         return;
       }
 
-      await navigator.serviceWorker.register("/sw.js");
-      const registration = await navigator.serviceWorker.ready;
       const publicKey = process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY;
       if (!publicKey) {
-        throw new Error("Missing public VAPID key.");
+        throw new Error("Reminders are not configured in this deployment. Set NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY in Vercel and redeploy.");
       }
+      const applicationServerKey = urlBase64ToUint8Array(publicKey);
+      if (applicationServerKey.length !== 65 || applicationServerKey[0] !== 4) {
+        throw new Error("The notification public key is invalid. Check NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY in Vercel and redeploy.");
+      }
+
+      await navigator.serviceWorker.register("/sw.js");
+      const registration = await navigator.serviceWorker.ready;
 
       const existingSubscription =
         await registration.pushManager.getSubscription();
@@ -89,7 +94,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
         existingSubscription ??
         (await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey),
+          applicationServerKey,
         }));
 
       const response = await fetch("/api/push-subscriptions", {
@@ -101,11 +106,18 @@ const KanbanBar: FC<KanbanBarProps> = ({
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to save push subscription");
+      if (response.redirected || response.status === 401) {
+        throw new Error("Your session has expired. Sign in again, then enable reminders.");
+      }
+      const result = await response.json().catch(() => null);
+      if (!response.ok || result?.ok !== true) {
+        throw new Error(result?.error || `Could not save this device for reminders (HTTP ${response.status}).`);
+      }
       setNotificationsEnabled(true);
     } catch (error) {
       console.error("Failed to enable push notifications:", error);
-      alert("Failed to enable reminders on this device.");
+      const detail = error instanceof Error ? error.message : "Please try again.";
+      alert(`Failed to enable reminders on this device.\n\n${detail}`);
     } finally {
       setEnablingNotifications(false);
     }
@@ -262,7 +274,6 @@ const KanbanBar: FC<KanbanBarProps> = ({
                 mr: 2,
                 display: { xs: "flex", md: "none" },
                 flexGrow: 1,
-                fontFamily: "monospace",
                 fontWeight: 700,
                 // letterSpacing: ".3rem",
                 color: "inherit",
@@ -279,7 +290,6 @@ const KanbanBar: FC<KanbanBarProps> = ({
               sx={{
                 ml: 15,
                 display: { xs: "none", md: "flex" },
-                fontFamily: "monospace",
                 fontWeight: 700,
 
                 color: "inherit",

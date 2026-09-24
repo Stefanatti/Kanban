@@ -165,6 +165,14 @@ test("editing only the due date preserves the reminder offset", async () => {
   assert.equal(f.getUpdate().data.reminders.create.remindAt.toISOString(), "2026-10-02T11:50:00.000Z");
 });
 
+test("editing task details leaves the existing reminder and due date untouched", async () => {
+  const f = editFixture();
+  assert.equal((await f.patch({ title: "Updated title", description: "Updated notes" })).status, 200);
+  assert.equal(f.getUpdate().data.title, "Updated title");
+  assert.equal(f.getUpdate().data.reminders, undefined);
+  assert.equal(f.getUpdate().data.dueDate, undefined);
+});
+
 for (const body of [{ dueDate: null }, { reminderMinutesBefore: null }, { completed: true }, { listId: "done" }]) {
   test(`editing task removes pending reminder: ${JSON.stringify(body)}`, async () => {
     const f = editFixture();
@@ -212,3 +220,26 @@ test("notification click focuses the existing app instead of opening another tab
   await work;
   assert.ok(closed && focused);
 });
+
+for (const code of ["P2021", "P2022", "P1001"]) {
+  test(`subscription storage errors are actionable without leaking details: ${code}`, async () => {
+    const fail = async () => { throw { code, message: "private-database-details" }; };
+    const { GET, POST } = load("app/api/push-subscriptions/route.ts", {
+      "@/lib/auth-utils": { getAuthUserId: async () => "owner" },
+      "@/lib/prisma": { prisma: { pushSubscription: { findMany: fail, upsert: fail } } },
+    });
+    const subscription = {
+      endpoint: "https://push.example/device",
+      keys: { p256dh: Buffer.alloc(65, 4).toString("base64url"), auth: Buffer.alloc(16).toString("base64url") },
+    };
+    const responses = [await GET(), await POST(new Request("http://localhost/api/push-subscriptions", {
+      method: "POST", body: JSON.stringify({ subscription }),
+    }))];
+    for (const response of responses) {
+      assert.equal(response.status, code === "P1001" ? 500 : 503);
+      const text = await response.text();
+      assert.ok(!text.includes("private-database-details"));
+      assert.ok(text.includes(code === "P1001" ? "SUBSCRIPTION_STORAGE_FAILED" : "REMINDER_STORAGE_NOT_READY"));
+    }
+  });
+}

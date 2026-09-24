@@ -1,7 +1,10 @@
 "use client";
 import * as React from "react";
 import { useState, useEffect, FC } from "react";
-import { Box, Button, Typography, Stack, Paper, styled } from "@mui/material";
+import { Box, Button, Typography, Stack, Paper, styled, IconButton, Tooltip } from "@mui/material";
+import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import TaskReminderModal from "./TaskReminderModal";
 import { useUpdateBoardMutation } from "@/lib/features/boardSlice";
 import EditBoardModal from "./EditBoardModal";
 import {
@@ -62,6 +65,7 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
   const [editTaskModalOpen, setEditTaskModalOpen] = useState<boolean>(false);
   const [deleteTaskModalOpen, setDeleteTaskModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
+  const [reminderModalOpen, setReminderModalOpen] = useState(false);
 
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
@@ -136,7 +140,7 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
 
   const handleChangeStatus = async (taskId: string, newListId: string) => {
     try {
-      await updateTask({ id: taskId, changes: { listId: newListId } }).unwrap();
+      const updatedTask = await updateTask({ id: taskId, changes: { listId: newListId } }).unwrap();
       // Move task between columns in local state
       setSelectedBoardLists((prevLists) => {
         let movedTask: Task | undefined;
@@ -144,7 +148,7 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
         const withoutTask = prevLists.map((list) => {
           if (!list) return list;
           const found = list.tasks?.find((t) => t.id === taskId);
-          if (found) movedTask = { ...found, listId: newListId };
+          if (found) movedTask = updatedTask;
           return {
             ...list,
             tasks: list.tasks?.filter((t) => t.id !== taskId),
@@ -377,7 +381,10 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                         gap: "10px",
                       }}
                     >
-                      {list?.tasks?.map((task) => (
+                      {list?.tasks?.map((task) => {
+                        const hasReminder = !task.completed && list.title.trim().toLowerCase() !== "done" &&
+                          Boolean(task.reminders?.some((reminder) => !reminder.sentAt && !reminder.cancelledAt));
+                        return (
                         <TaskItem
                           key={task.id}
                           sx={{
@@ -391,9 +398,22 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                           }}
                           onClick={() => handleTaskClick(task)}
                         >
-                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 600, flex: 1, minWidth: 0, overflowWrap: "anywhere" }}>
                             {task.title}
                           </Typography>
+                          <Tooltip title={hasReminder ? "Edit reminder" : "Set reminder"}>
+                            <IconButton aria-label={`${hasReminder ? "Edit" : "Set"} reminder for ${task.title}`}
+                              sx={{ color: hasReminder ? "primary.main" : "text.disabled", width: 44, height: 44, flexShrink: 0 }}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setSelectedTask(task);
+                                setReminderModalOpen(true);
+                              }}>
+                              {hasReminder ? <NotificationsActiveIcon /> : <NotificationsNoneIcon />}
+                            </IconButton>
+                          </Tooltip>
+                          </Box>
                           {task.subtasks && task.subtasks.length > 0 && (
                             <Typography
                               variant="body2"
@@ -407,7 +427,7 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                             </Typography>
                           )}
                         </TaskItem>
-                      ))}
+                      ); })}
                     </Box>
                   </Box>
                 ))}
@@ -502,6 +522,13 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
             onDeleteTask={handleOpenDeleteFromView}
           />
         </div>
+      )}
+      {reminderModalOpen && selectedTask && (
+        <TaskReminderModal task={selectedTask}
+          completed={Boolean(selectedTask.completed || selectedBoardLists.some((list) =>
+            list?.title.trim().toLowerCase() === "done" && list.tasks?.some((task) => task.id === selectedTask.id)))}
+          onSave={handleUpdateTask}
+          onClose={() => { setReminderModalOpen(false); setSelectedTask(undefined); }} />
       )}
       {editTaskModalOpen && selectedTask && (
         <div onClick={(e) => e.stopPropagation()}>
