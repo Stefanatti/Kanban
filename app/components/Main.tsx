@@ -11,7 +11,8 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import NotificationAddIcon from "@mui/icons-material/NotificationAdd";
+import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import TaskReminderModal from "./TaskReminderModal";
 import { useUpdateBoardMutation } from "@/lib/features/boardSlice";
 import EditBoardModal from "./EditBoardModal";
@@ -454,15 +455,20 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                                     setReminderModalOpen(true);
                                   }}
                                 >
-                                  <NotificationAddIcon />
+                                  {hasReminder ? (
+                                    <NotificationsActiveIcon />
+                                  ) : (
+                                    <NotificationsNoneIcon />
+                                  )}
                                 </IconButton>
                               </Tooltip>
                             </Box>
 
                             {task.subtasks && task.subtasks.length > 0 && (
+                              <Box sx={{ mt: 0.5, textAlign: "center" }}>
                               <Typography
                                 variant="body2"
-                                sx={{ color: "text.secondary", mt: 0.5, textAlign: "center" }}
+                                sx={{ color: "text.secondary", mt: 0.5 }}
                               >
                                 {
                                   task.subtasks.filter((s) => s.isCompleted)
@@ -472,8 +478,7 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                               </Typography>
                             )}
                           </TaskItem>
-                        );
-                      })}
+                      ); })}
                     </Box>
                   </Box>
                 ))}
