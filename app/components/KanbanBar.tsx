@@ -240,6 +240,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
   return (
     <>
       <AppBar
+        id="kanban-navbar"
         position="static"
         sx={{ backgroundColor: "background.paper", color: "text.primary" }}
       >

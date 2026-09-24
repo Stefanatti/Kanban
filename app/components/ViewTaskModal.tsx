@@ -34,7 +34,9 @@ const style = {
   maxHeight: "90vh",
   overflow: "auto",
   bgcolor: "background.paper",
-  border: "2px solid #000",
+  color: "text.primary",
+  border: "1px solid",
+  borderColor: "divider",
   borderRadius: "10px",
   boxShadow: 24,
   p: 4,
@@ -153,7 +155,7 @@ function ViewTaskModal({
         {task.description && (
           <Typography
             component="p"
-            sx={{ color: "grey.600", mb: 3, fontSize: "0.9rem" }}
+            sx={{ color: "text.secondary", mb: 3, fontSize: "0.9rem" }}
           >
             {task.description}
           </Typography>
@@ -173,11 +175,11 @@ function ViewTaskModal({
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    backgroundColor: "#f5f5f5",
+                    backgroundColor: "background.default",
                     borderRadius: 1,
                     px: 1.5,
                     py: 0.5,
-                    "&:hover": { backgroundColor: "#e8e8e8" },
+                    "&:hover": { backgroundColor: "action.hover" },
                   }}
                 >
                   <FormControlLabel
@@ -197,7 +199,7 @@ function ViewTaskModal({
                             ? "line-through"
                             : "none",
                           color: subtask.isCompleted
-                            ? "grey.500"
+                            ? "text.secondary"
                             : "text.primary",
                           fontSize: "0.85rem",
                         }}

@@ -1,5 +1,5 @@
 "use client";
-import { useState, FC } from "react";
+import { useState, useLayoutEffect, FC } from "react";
 import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import Divider from "@mui/material/Divider";
@@ -7,7 +7,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import InboxIcon from "@mui/icons-material/MoveToInbox";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import { Drawer, Switch, Typography } from "@mui/material";
@@ -26,6 +26,26 @@ interface DrawerProps {
 
 const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
   const [open, setOpen] = useState<boolean>(false);
+  const [navbarBottom, setNavbarBottom] = useState(0);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const navbar = document.getElementById("kanban-navbar");
+    if (!navbar) return;
+    const updateOffset = () => {
+      setNavbarBottom(Math.max(0, navbar.getBoundingClientRect().bottom));
+    };
+    updateOffset();
+    const observer = new ResizeObserver(updateOffset);
+    observer.observe(navbar);
+    window.addEventListener("resize", updateOffset);
+    window.addEventListener("scroll", updateOffset, true);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateOffset);
+      window.removeEventListener("scroll", updateOffset, true);
+    };
+  }, [open]);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [boardName, setBoardName] = useState<string>("");
   const [createBoard] = useCreateBoardMutation();
@@ -63,10 +83,11 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
     <Box
       sx={{
         width: 320,
+        maxWidth: "100vw",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        height: "90%",
+        minHeight: "100%",
       }}
       role="presentation"
       onClick={toggleDrawer(false)}
@@ -79,7 +100,7 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
               fontWeight: 700,
             }}
           >
-            All Boards ({boards?.length ?? 0})
+            All Boards ( {boards?.length ?? 0} )
           </Typography>
         </ListItem>
         <Divider sx={{ mt: 2, mb: 2 }} />
@@ -100,7 +121,7 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
               }}
             >
               <ListItemIcon sx={{ minWidth: 36 }}>
-                <InboxIcon fontSize="small" />
+                <FormatListBulletedIcon fontSize="small" />
               </ListItemIcon>
               <ListItemText
                 primary={board.title}
@@ -125,7 +146,7 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
             }}
           >
             <ListItemIcon sx={{ minWidth: 36, color: "primary.main" }}>
-              <InboxIcon fontSize="small" />
+              <FormatListBulletedIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText
               primary="+ Create New Board"
@@ -177,7 +198,19 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
   return (
     <>
       <DrawerButton toggleDrawer={toggleDrawer} />
-      <Drawer open={open} onClose={toggleDrawer(false)}>
+      <Drawer
+        open={open}
+        onClose={toggleDrawer(false)}
+        sx={{
+          top: navbarBottom,
+          "& .MuiBackdrop-root": { top: navbarBottom },
+          "& .MuiDrawer-paper": {
+            top: navbarBottom,
+            height: `calc(100dvh - ${navbarBottom}px)`,
+            bgcolor: "background.paper",
+          },
+        }}
+      >
         {sideBarList}
       </Drawer>
     </>

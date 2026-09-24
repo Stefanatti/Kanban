@@ -61,7 +61,10 @@ export default function TaskReminderModal({ task, completed, onClose, onSave }: 
 
   return (
     <Dialog open onClose={() => { if (!saving) onClose(); }} fullWidth maxWidth="xs"
-      aria-labelledby="task-reminder-title" PaperProps={{ sx: { borderRadius: 3 } }}>
+      aria-labelledby="task-reminder-title" PaperProps={{ sx: {
+        borderRadius: 3, bgcolor: "background.paper", color: "text.primary",
+        backgroundImage: "none", border: "1px solid", borderColor: "divider",
+      } }}>
       <Box component="form" noValidate onSubmit={(event) => { event.preventDefault(); if (!completed) void save(); }}>
         <DialogTitle id="task-reminder-title">{activeReminder ? "Edit reminder" : "Set reminder"}</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>

@@ -1,9 +1,17 @@
 "use client";
 import * as React from "react";
 import { useState, useEffect, FC } from "react";
-import { Box, Button, Typography, Stack, Paper, styled, IconButton, Tooltip } from "@mui/material";
-import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
-import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import {
+  Box,
+  Button,
+  Typography,
+  Stack,
+  Paper,
+  styled,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import NotificationAddIcon from "@mui/icons-material/NotificationAdd";
 import TaskReminderModal from "./TaskReminderModal";
 import { useUpdateBoardMutation } from "@/lib/features/boardSlice";
 import EditBoardModal from "./EditBoardModal";
@@ -27,14 +35,12 @@ import {
 } from "@/app/interfaces/interfaces";
 
 const TaskItem = styled(Paper)(({ theme }) => ({
-  backgroundColor: "#fff",
+  backgroundColor: theme.palette.background.paper,
   ...theme.typography.body2,
   padding: theme.spacing(2),
   textAlign: "center",
-  color: theme.palette.text.secondary,
-  ...theme.applyStyles("dark", {
-    backgroundColor: "#1A2027",
-  }),
+  color: theme.palette.text.primary,
+  backgroundImage: "none",
 }));
 
 interface MainProps {
@@ -140,7 +146,10 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
 
   const handleChangeStatus = async (taskId: string, newListId: string) => {
     try {
-      const updatedTask = await updateTask({ id: taskId, changes: { listId: newListId } }).unwrap();
+      const updatedTask = await updateTask({
+        id: taskId,
+        changes: { listId: newListId },
+      }).unwrap();
       // Move task between columns in local state
       setSelectedBoardLists((prevLists) => {
         let movedTask: Task | undefined;
@@ -382,52 +391,89 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                       }}
                     >
                       {list?.tasks?.map((task) => {
-                        const hasReminder = !task.completed && list.title.trim().toLowerCase() !== "done" &&
-                          Boolean(task.reminders?.some((reminder) => !reminder.sentAt && !reminder.cancelledAt));
+                        const hasReminder =
+                          !task.completed &&
+                          list.title.trim().toLowerCase() !== "done" &&
+                          Boolean(
+                            task.reminders?.some(
+                              (reminder) =>
+                                !reminder.sentAt && !reminder.cancelledAt,
+                            ),
+                          );
                         return (
-                        <TaskItem
-                          key={task.id}
-                          sx={{
-                            cursor: "pointer",
-                            minHeight: "80px",
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "center",
-                            backgroundColor: "background.paper",
-                            "&:hover": { backgroundColor: "action.hover" },
-                          }}
-                          onClick={() => handleTaskClick(task)}
-                        >
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <Typography variant="h6" sx={{ fontWeight: 600, flex: 1, minWidth: 0, overflowWrap: "anywhere" }}>
-                            {task.title}
-                          </Typography>
-                          <Tooltip title={hasReminder ? "Edit reminder" : "Set reminder"}>
-                            <IconButton aria-label={`${hasReminder ? "Edit" : "Set"} reminder for ${task.title}`}
-                              sx={{ color: hasReminder ? "primary.main" : "text.disabled", width: 44, height: 44, flexShrink: 0 }}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setSelectedTask(task);
-                                setReminderModalOpen(true);
-                              }}>
-                              {hasReminder ? <NotificationsActiveIcon /> : <NotificationsNoneIcon />}
-                            </IconButton>
-                          </Tooltip>
-                          </Box>
-                          {task.subtasks && task.subtasks.length > 0 && (
-                            <Typography
-                              variant="body2"
-                              sx={{ color: "text.secondary", mt: 0.5 }}
+                          <TaskItem
+                            key={task.id}
+                            sx={{
+                              cursor: "pointer",
+                              minHeight: "80px",
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "center",
+                              backgroundColor: "background.paper",
+                              "&:hover": { backgroundColor: "action.hover" },
+                            }}
+                            onClick={() => handleTaskClick(task)}
+                          >
+                            <Box
+                              sx={{
+                                display: "grid",
+                                gridTemplateColumns: "44px minmax(0, 1fr) 44px",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
                             >
-                              {
-                                task.subtasks.filter((s) => s.isCompleted)
-                                  .length
-                              }{" "}
-                              of {task.subtasks.length} subtasks
-                            </Typography>
-                          )}
-                        </TaskItem>
-                      ); })}
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontWeight: 600,
+                                  gridColumn: 2,
+                                  minWidth: 0,
+                                  overflowWrap: "anywhere",
+                                }}
+                              >
+                                {task.title}
+                              </Typography>
+                              <Tooltip
+                                title={
+                                  hasReminder ? "Edit reminder" : "Set reminder"
+                                }
+                              >
+                                <IconButton
+                                  aria-label={`${hasReminder ? "Edit" : "Set"} reminder for ${task.title}`}
+                                  sx={{
+                                    color: hasReminder
+                                      ? "primary.main"
+                                      : "text.disabled",
+                                    width: 44,
+                                    height: 44,
+                                    flexShrink: 0,
+                                  }}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedTask(task);
+                                    setReminderModalOpen(true);
+                                  }}
+                                >
+                                  <NotificationAddIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+
+                            {task.subtasks && task.subtasks.length > 0 && (
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "text.secondary", mt: 0.5, textAlign: "center" }}
+                              >
+                                {
+                                  task.subtasks.filter((s) => s.isCompleted)
+                                    .length
+                                }{" "}
+                                of {task.subtasks.length} subtasks
+                              </Typography>
+                            )}
+                          </TaskItem>
+                        );
+                      })}
                     </Box>
                   </Box>
                 ))}
@@ -524,11 +570,22 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
         </div>
       )}
       {reminderModalOpen && selectedTask && (
-        <TaskReminderModal task={selectedTask}
-          completed={Boolean(selectedTask.completed || selectedBoardLists.some((list) =>
-            list?.title.trim().toLowerCase() === "done" && list.tasks?.some((task) => task.id === selectedTask.id)))}
+        <TaskReminderModal
+          task={selectedTask}
+          completed={Boolean(
+            selectedTask.completed ||
+            selectedBoardLists.some(
+              (list) =>
+                list?.title.trim().toLowerCase() === "done" &&
+                list.tasks?.some((task) => task.id === selectedTask.id),
+            ),
+          )}
           onSave={handleUpdateTask}
-          onClose={() => { setReminderModalOpen(false); setSelectedTask(undefined); }} />
+          onClose={() => {
+            setReminderModalOpen(false);
+            setSelectedTask(undefined);
+          }}
+        />
       )}
       {editTaskModalOpen && selectedTask && (
         <div onClick={(e) => e.stopPropagation()}>
