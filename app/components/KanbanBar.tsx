@@ -7,6 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import { useState, FC } from "react";
 import AddTaskModal from "./AddTaskModal";
+import { useMessageDialog } from "./useMessageDialog";
 
 import Typography from "@mui/material/Typography";
 import Menu from "@mui/material/Menu";
@@ -41,6 +42,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
   const [newTaskName, setNewTaskName] = useState<string>("");
   const [listId, setListId] = useState<string | undefined>("");
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const { showMessage, messageDialog } = useMessageDialog("Task reminders");
   const [enablingNotifications, setEnablingNotifications] = useState(false);
   const [createTask] = useCreateTaskMutation();
   const dispatch = useAppDispatch();
@@ -64,7 +66,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
 
   const handleEnableNotifications = async () => {
     if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
-      alert("Push notifications are not supported by this browser.");
+      showMessage("Push notifications are not supported by this browser.");
       return;
     }
 
@@ -72,7 +74,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        alert("Notification permission was not granted.");
+        showMessage("Notification permission was not granted. Allow notifications in your browser's site settings, then try again.");
         return;
       }
 
@@ -117,7 +119,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
     } catch (error) {
       console.error("Failed to enable push notifications:", error);
       const detail = error instanceof Error ? error.message : "Please try again.";
-      alert(`Failed to enable reminders on this device.\n\n${detail}`);
+      showMessage(`Failed to enable reminders on this device.\n\n${detail}`);
     } finally {
       setEnablingNotifications(false);
     }
@@ -505,6 +507,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
           )}
         </Container>
       </AppBar>
+      {messageDialog}
     </>
   );
 };

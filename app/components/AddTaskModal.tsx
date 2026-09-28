@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
 import { MenuItem, TextField } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
+import { useMessageDialog } from "./useMessageDialog";
 import {
   Board,
   Task,
@@ -65,6 +66,7 @@ function AddTaskModal({
   onUpdateTask,
 }: ModalProps): React.ReactElement {
   const isEditMode = !!editTask;
+  const { showMessage, messageDialog } = useMessageDialog("Task details");
 
   const [selectedColumnStatus, setSelectedColumnStatus] = useState<string>("");
   const [description, setDescription] = useState<string>("");
@@ -116,7 +118,7 @@ function AddTaskModal({
     const title = isEditMode ? taskTitle : newTaskName;
 
     if (!title.trim() || !selectedColumnStatus.trim()) {
-      alert("Task name and status are required!");
+      showMessage("Please enter a task name and select a status.");
       return;
     }
 
@@ -125,7 +127,7 @@ function AddTaskModal({
       (list) => list.title === selectedColumnStatus,
     );
     if (!targetList) {
-      alert("Invalid board configuration!");
+      showMessage("The selected task status is unavailable. Please choose another status.");
       return;
     }
 
@@ -153,11 +155,12 @@ function AddTaskModal({
       handleClose();
     } catch (error) {
       console.error("Failed to save task:", error);
-      alert("Failed to save task. Please try again.");
+      showMessage("Failed to save task. Please try again.");
     }
   };
 
   return (
+    <>
     <Modal
       open={open}
       onClose={handleClose}
@@ -338,6 +341,8 @@ function AddTaskModal({
         </Box>
       </Box>
     </Modal>
+    {messageDialog}
+    </>
   );
 }
 

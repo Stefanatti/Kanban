@@ -9,6 +9,7 @@ const DrawerButton: React.FC<ButtonDrawerProps> = ({ toggleDrawer }) => {
   return (
     <Box sx={{ position: "fixed", bottom: 50, left: 0 }}>
       <IconButton
+        aria-label="Show sidebar"
         onClick={toggleDrawer(true)}
         sx={{
           borderRadius: "0 50px 50px 0",

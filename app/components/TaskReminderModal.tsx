@@ -1,4 +1,8 @@
 import { useState } from "react";
+import dayjs, { Dayjs } from "dayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import {
   Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
   MenuItem, TextField, Typography,
@@ -12,13 +16,6 @@ const options = [
   { value: 1440, label: "1 day before" },
 ];
 
-function localDateTime(value: Task["dueDate"]) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-}
-
 interface Props {
   task: Task;
   completed: boolean;
@@ -31,7 +28,8 @@ export default function TaskReminderModal({ task, completed, onClose, onSave }: 
   const initialOffset = activeReminder && task.dueDate
     ? Math.max(0, Math.round((new Date(task.dueDate).getTime() - new Date(activeReminder.remindAt).getTime()) / 60000))
     : 10;
-  const [dueDate, setDueDate] = useState(() => localDateTime(task.dueDate));
+  const [dueDate, setDueDate] = useState<Dayjs | null>(() => task.dueDate ? dayjs(task.dueDate) : null);
+  const [dateInvalid, setDateInvalid] = useState(false);
   const [offset, setOffset] = useState(initialOffset);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -40,14 +38,14 @@ export default function TaskReminderModal({ task, completed, onClose, onSave }: 
   const save = async (remove = false) => {
     if (saving) return;
     setError("");
-    if (!remove && (!dueDate || Number.isNaN(new Date(dueDate).getTime()))) {
+    if (!remove && (!dueDate?.isValid() || dateInvalid)) {
       setError("Choose a due date and time for this reminder.");
       return;
     }
     setSaving(true);
     try {
       await onSave(task.id, remove ? { reminderMinutesBefore: null } : {
-        dueDate: new Date(dueDate).toISOString(),
+        dueDate: dueDate!.second(0).millisecond(0).toISOString(),
         reminderMinutesBefore: offset,
         timezone,
       });
@@ -71,10 +69,24 @@ export default function TaskReminderModal({ task, completed, onClose, onSave }: 
           <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>{task.title}</Typography>
           {completed && <Alert severity="info">Move this task to To Do or Doing to set a reminder.</Alert>}
           {error && <Alert severity="error">{error}</Alert>}
-          <TextField label="Due date and time" type="datetime-local" fullWidth
-            value={dueDate} onChange={(event) => setDueDate(event.target.value)}
-            disabled={saving || completed} slotProps={{ inputLabel: { shrink: true } }}
-            helperText={`Times are shown in ${timezone}`} />
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateTimePicker label="Due date and time" value={dueDate}
+              onChange={(value, context) => {
+                setDueDate(value);
+                setDateInvalid(context.validationError !== null);
+              }}
+              onError={(reason) => setDateInvalid(reason !== null)}
+              ampm={false} format="DD/MM/YYYY HH:mm" timeSteps={{ minutes: 1 }}
+              disabled={saving || completed}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  helperText: dateInvalid ? "Enter a valid date and time." : `Times are shown in ${timezone}`,
+                },
+                actionBar: { actions: ["cancel", "accept"] },
+                popper: { sx: { zIndex: (theme) => theme.zIndex.modal + 1 } },
+              }} />
+          </LocalizationProvider>
           <TextField select label="Remind me" fullWidth value={offset}
             disabled={saving || completed} onChange={(event) => setOffset(Number(event.target.value))}>
             {!options.some((item) => item.value === initialOffset) &&

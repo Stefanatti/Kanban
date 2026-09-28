@@ -10,7 +10,8 @@ import ListItemText from "@mui/material/ListItemText";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
-import { Drawer, Switch, Typography } from "@mui/material";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { Button, Drawer, Switch, Typography } from "@mui/material";
 import AddBoardModal from "./AddBoardModal";
 import DrawerButton from "./DrawerButton";
 import { useCreateBoardMutation } from "@/lib/features/boardSlice";
@@ -25,7 +26,7 @@ interface DrawerProps {
 }
 
 const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(true);
   const [navbarBottom, setNavbarBottom] = useState(0);
 
   useLayoutEffect(() => {
@@ -87,12 +88,12 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        minHeight: "100%",
+        height: "100%",
+        overflow: "hidden",
       }}
       role="presentation"
-      onClick={toggleDrawer(false)}
     >
-      <List>
+      <List sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
         <ListItem>
           <Typography
             variant="h6"
@@ -108,7 +109,7 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
         {boards?.map((board) => (
           <ListItem key={board.id} disablePadding sx={{ mb: 0.5, mt: 2 }}>
             <ListItemButton
-              onClick={() => onBoardSelect(board.id)}
+              onClick={() => { onBoardSelect(board.id); setOpen(false); }}
               sx={{
                 borderRadius: "0 20px 20px 0",
                 mr: 2,
@@ -168,6 +169,7 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
       )}
 
       {/* Theme Toggle */}
+      <Box sx={{ flexShrink: 0, pt: 2, pb: 3 }}>
       <Box
         sx={{
           display: "flex",
@@ -175,8 +177,7 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
           justifyContent: "center",
           gap: 2,
           mx: 2,
-          mt: 3,
-          mb: 2,
+          mb: 1,
           py: 1.5,
           borderRadius: "6px",
           backgroundColor: "background.default",
@@ -185,6 +186,7 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
       >
         <LightModeIcon sx={{ color: "#828FA3", fontSize: 20 }} />
         <Switch
+          inputProps={{ "aria-label": "Dark mode" }}
           checked={mode === "dark"}
           onChange={toggleTheme}
           color="primary"
@@ -192,12 +194,25 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
         />
         <DarkModeIcon sx={{ color: "#828FA3", fontSize: 20 }} />
       </Box>
+      <Button
+        startIcon={<VisibilityOffIcon />}
+        onClick={toggleDrawer(false)}
+        sx={{
+          width: "calc(100% - 16px)", minHeight: 44, px: 3,
+          justifyContent: "flex-start", color: "text.secondary",
+          borderRadius: "0 24px 24px 0",
+          "&:hover": { bgcolor: "action.hover", color: "primary.main" },
+        }}
+      >
+        Hide Sidebar
+      </Button>
+      </Box>
     </Box>
   );
 
   return (
     <>
-      <DrawerButton toggleDrawer={toggleDrawer} />
+      {!open && <DrawerButton toggleDrawer={toggleDrawer} />}
       <Drawer
         open={open}
         onClose={toggleDrawer(false)}

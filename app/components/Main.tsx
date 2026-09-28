@@ -465,10 +465,9 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                             </Box>
 
                             {task.subtasks && task.subtasks.length > 0 && (
-                              <Box sx={{ mt: 0.5, textAlign: "center" }}>
                               <Typography
                                 variant="body2"
-                                sx={{ color: "text.secondary", mt: 0.5 }}
+                                sx={{ color: "text.secondary", mt: 0.5, textAlign: "center" }}
                               >
                                 {
                                   task.subtasks.filter((s) => s.isCompleted)
