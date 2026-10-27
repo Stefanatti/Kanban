@@ -67,7 +67,6 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
   const [updateTask] = useUpdateTaskMutation();
   const [deleteTaskMutation] = useDeleteTaskMutation();
 
-  // Task modal states
   const [viewTaskModalOpen, setViewTaskModalOpen] = useState(false);
   const [editTaskModalOpen, setEditTaskModalOpen] = useState<boolean>(false);
   const [deleteTaskModalOpen, setDeleteTaskModalOpen] = useState(false);
@@ -77,7 +76,6 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
 
-  // Register the edit board opener so KanbanBar can trigger it
   useEffect(() => {
     if (onRegisterEditBoard) {
       onRegisterEditBoard(handleOpenModal);
@@ -100,13 +98,11 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
   };
 
   const handleOpenEditFromView = () => {
-    // Close view modal but keep selectedTask, then open edit
     setViewTaskModalOpen(false);
     setEditTaskModalOpen(true);
   };
 
   const handleOpenDeleteFromView = () => {
-    // Close view modal but keep selectedTask, then open delete confirmation
     setViewTaskModalOpen(false);
     setDeleteTaskModalOpen(true);
   };
@@ -121,7 +117,6 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isCompleted }),
       });
-      // Update local state
       setSelectedBoardLists((prevLists) =>
         prevLists.map((list) => {
           if (!list) return list;
@@ -151,10 +146,8 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
         id: taskId,
         changes: { listId: newListId },
       }).unwrap();
-      // Move task between columns in local state
       setSelectedBoardLists((prevLists) => {
         let movedTask: Task | undefined;
-        // Remove from old column
         const withoutTask = prevLists.map((list) => {
           if (!list) return list;
           const found = list.tasks?.find((t) => t.id === taskId);
@@ -164,7 +157,6 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
             tasks: list.tasks?.filter((t) => t.id !== taskId),
           };
         });
-        // Add to new column
         if (!movedTask) return prevLists;
         return withoutTask.map((list) => {
           if (!list) return list;
@@ -184,7 +176,6 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
     if (!selectedTask) return;
     try {
       await deleteTaskMutation(selectedTask.id).unwrap();
-      // Remove from local state
       setSelectedBoardLists((prevLists) =>
         prevLists.map((list) => {
           if (!list) return list;
@@ -204,7 +195,6 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
   const handleUpdateTask = async (taskId: string, changes: TaskUpdateInput) => {
     try {
       const updatedTask = await updateTask({ id: taskId, changes }).unwrap();
-      // Update local state to reflect changes
       setSelectedBoardLists((prevLists) =>
         prevLists.map((list) => {
           if (!list) return list;
@@ -248,7 +238,6 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
     if (!boardId) return;
 
     try {
-      // 1. Update board name if changed
       if (data.boardName !== selectedBoardTitle) {
         await updateBoard({
           id: boardId,
@@ -257,12 +246,10 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
         setSelectedBoardTitle(data.boardName);
       }
 
-      // 2. Delete removed columns
       for (const colId of data.columnsToDelete) {
         await deleteList(colId).unwrap();
       }
 
-      // 3. Rename existing columns if title changed
       for (const col of data.columnsToKeep) {
         const original = selectedBoardLists.find((l) => l?.id === col.id);
         if (original && original.title !== col.title) {
@@ -273,14 +260,12 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
         }
       }
 
-      // 4. Create new columns
       const newLists = [];
       for (const title of data.columnsToAdd) {
         const newList = await createList({ title, boardId }).unwrap();
         newLists.push(newList);
       }
 
-      // 5. Update local state to reflect all changes
       const updatedLists = selectedBoardLists
         .filter((list) => list && !data.columnsToDelete.includes(list.id))
         .map((list) => {
@@ -382,7 +367,6 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                       sx={{
                         minWidth: "330px",
                         height: "95%",
-                        //backgroundColor: "#d33cc6",
                         boxShadow: 1,
                         borderRadius: 2,
                         padding: 2,
@@ -467,7 +451,11 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                             {task.subtasks && task.subtasks.length > 0 && (
                               <Typography
                                 variant="body2"
-                                sx={{ color: "text.secondary", mt: 0.5, textAlign: "center" }}
+                                sx={{
+                                  color: "text.secondary",
+                                  mt: 0.5,
+                                  textAlign: "center",
+                                }}
                               >
                                 {
                                   task.subtasks.filter((s) => s.isCompleted)
@@ -477,7 +465,8 @@ const Main: FC<MainProps> = ({ selectedBoard, onRegisterEditBoard }) => {
                               </Typography>
                             )}
                           </TaskItem>
-                      ); })}
+                        );
+                      })}
                     </Box>
                   </Box>
                 ))}

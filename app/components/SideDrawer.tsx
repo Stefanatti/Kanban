@@ -19,10 +19,8 @@ import { Board } from "@/app/interfaces/interfaces";
 import { useThemeMode } from "@/app/ThemeContext";
 
 interface DrawerProps {
-  // toggleDrawer: (open: boolean) => () => void;
   boards?: Board[];
   onBoardSelect: (id: string) => void;
-  // createBoard: (title: string) => Promise<void>;
 }
 
 const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
@@ -168,7 +166,6 @@ const SideBar: FC<DrawerProps> = ({ boards, onBoardSelect }) => {
         </div>
       )}
 
-      {/* Theme Toggle */}
       <Box sx={{ flexShrink: 0, pt: 2, pb: 3 }}>
       <Box
         sx={{

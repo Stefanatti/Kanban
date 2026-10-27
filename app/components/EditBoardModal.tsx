@@ -131,7 +131,6 @@ function EditBoardModal({
           Edit Board
         </Typography>
 
-        {/* Board Name */}
         <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600 }}>
           Board Name
         </Typography>
@@ -143,7 +142,6 @@ function EditBoardModal({
           sx={{ mb: 3 }}
         />
 
-        {/* Board Columns */}
         <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
           Board Columns
         </Typography>
@@ -178,7 +176,6 @@ function EditBoardModal({
           ))}
         </Box>
 
-        {/* Action Buttons */}
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 2 }}>
           <Button
             sx={{ borderRadius: "20px" }}

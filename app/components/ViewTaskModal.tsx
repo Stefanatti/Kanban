@@ -103,7 +103,6 @@ function ViewTaskModal({
       aria-labelledby="view-task-modal-title"
     >
       <Box sx={style}>
-        {/* Title row with three dots menu */}
         <Box
           sx={{
             display: "flex",
@@ -151,7 +150,6 @@ function ViewTaskModal({
           </Menu>
         </Box>
 
-        {/* Description */}
         {task.description && (
           <Typography
             component="p"
@@ -161,7 +159,6 @@ function ViewTaskModal({
           </Typography>
         )}
 
-        {/* Subtasks */}
         {totalCount > 0 && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
@@ -215,7 +212,6 @@ function ViewTaskModal({
           </Box>
         )}
 
-        {/* Current Status */}
         <Box>
           <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
             Current Status

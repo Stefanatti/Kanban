@@ -142,16 +142,9 @@ const KanbanBar: FC<KanbanBarProps> = ({
     return () => { cancelled = true; };
   }, [session?.user?.id]);
 
-  // const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
-  //   setAnchorElNav(event.currentTarget);
-  // };
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
   };
-
-  // const handleCloseNavMenu = () => {
-  //   setAnchorElNav(null);
-  // };
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
@@ -204,41 +197,6 @@ const KanbanBar: FC<KanbanBarProps> = ({
     }
   };
 
-  // const handleCreateTask = async (taskName: string, listId?: string) => {
-  //   try {
-  //     if (taskName && listId) {
-  //       console.log(`Creating task "${taskName}" in list "${listId}"`);
-
-  //       const newTask = {
-  //         title: taskName,
-  //         listId,
-  //       };
-
-  //       // Create task in the backend
-  //       const theNewTask = await createTask(newTask).unwrap();
-  //       console.log(theNewTask);
-  //       //  setSelectedBoardTasks((prevTasks) => [...prevTasks, response.data]);
-  //       // setNewTaskName("");
-  //       // setListId("");
-  //     }
-  //   } catch (err) {
-  //     console.error("Failed to submit changes:", err);
-  //   }
-  // };
-
-  // const handleCreateTask = async (taskName: string, listId?: string) => {
-  //   try {
-  //     if (taskName && listId) {
-  //       const newTask = { title: taskName, listId };
-  //       //await createTask(newTask).unwrap();
-  //       // setNewTaskName("");
-  //       // setSelectedBoardTasks((prevTasks) => [...prevTasks, newTask]);
-  //     }
-  //   } catch (err) {
-  //     console.error("Failed to submit changes:", err);
-  //   }
-  // };
-
   return (
     <>
       <AppBar
@@ -254,15 +212,6 @@ const KanbanBar: FC<KanbanBarProps> = ({
               noWrap
               component="a"
               href="#app-bar-with-responsive-menu"
-              // sx={{
-              //   mr: 2,
-              //   display: { xs: "none", md: "flex" },
-              //   fontFamily: "monospace",
-              //   fontWeight: 700,
-              //   letterSpacing: ".3rem",
-              //   color: "inherit",
-              //   textDecoration: "none",
-              // }}
             >
               Kanban
             </Typography>
@@ -278,7 +227,6 @@ const KanbanBar: FC<KanbanBarProps> = ({
                 display: { xs: "flex", md: "none" },
                 flexGrow: 1,
                 fontWeight: 700,
-                // letterSpacing: ".3rem",
                 color: "inherit",
                 textDecoration: "none",
               }}
@@ -301,45 +249,6 @@ const KanbanBar: FC<KanbanBarProps> = ({
             >
               {selectedBoard?.title}
             </Typography>
-            {/* <Box
-              sx={{ display: { xs: "flex", md: "none" }, flexGrow: 1, mr: 5 }}
-            >
-              <IconButton
-                size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={handleOpenNavMenu}
-                color="inherit"
-              >
-                <MenuIcon />
-              </IconButton>
-              <Menu
-                id="menu-appbar"
-                anchorEl={anchorElNav}
-                disablePortal
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "left",
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "left",
-                }}
-                open={Boolean(anchorElNav)}
-                onClose={handleCloseNavMenu}
-                sx={{
-                  display: { xs: "block", md: "none" },
-                }}
-              >
-                {pages.map((page) => (
-                  <MenuItem key={page} onClick={handleCloseNavMenu}>
-                    <Typography textAlign="center">{page}</Typography>
-                  </MenuItem>
-                ))}
-              </Menu>
-            </Box> */}
             <Box
               sx={{
                 flexGrow: 1,
@@ -358,19 +267,7 @@ const KanbanBar: FC<KanbanBarProps> = ({
                   + Add new Task
                 </Typography>
               </Button>
-
-              {/* {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: "white", display: "block" }}
-              >
-                {page}
-              </Button>
-            ))} */}
             </Box>
-
-            {/* THREE DOTS!! */}
 
             <Box
               sx={{
@@ -380,7 +277,6 @@ const KanbanBar: FC<KanbanBarProps> = ({
                 gap: 0.5,
               }}
             >
-              {/* Board settings (3 dots) */}
               <Tooltip title="Board settings">
                 <IconButton
                   size="large"
@@ -430,7 +326,6 @@ const KanbanBar: FC<KanbanBarProps> = ({
                 </MenuItem>
               </Menu>
 
-              {/* User avatar with logout */}
               <Tooltip
                 title={session?.user?.name || session?.user?.email || "Account"}
               >
